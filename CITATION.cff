@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use SputterOne in your research or teaching, please cite it as below."
+authors:
+  - family-names: Gururajan
+    given-names: Balaji
+    orcid: ""
+    affiliation: "Department of Electrical Engineering, Yuan Ze University, Taiwan"
+title: "SputterOne: A Physics-Informed Reduced-Order Magnetron Sputtering Simulation Platform"
+version: 1.0.0
+date-released: 2025-01-01
+url: "https://balaji-gururajan90.github.io/SputterOne/"
+repository-code: "https://github.com/balaji-gururajan90/SputterOne"
+license: MIT
+keywords:
+  - magnetron sputtering
+  - reduced-order modelling
+  - physics-informed simulation
+  - thin-film deposition
+  - process optimisation
+  - browser-based simulator
+abstract: "SputterOne is a browser-based physics-informed reduced-order simulation platform 
+for real-time exploration of magnetron sputtering process conditions. It integrates the 
+Yamamura-Bohdansky sputtering yield formulation, kinetic-theory mean free path transport, 
+probabilistic gas-phase scattering, Berg-framework reactive sputtering hysteresis, 
+co-sputtering composition estimation, and Bauer-scheme growth mode classification."

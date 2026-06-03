@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Sputtering Simulation — Academic Brochure</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    @page { size: A4; margin: 0; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold:        #A97B12;
+      --cyan:        #1E78C8;
+      --green:       #2F8A57;
+      --red:         #C44C4C;
+      --bg-dark:     #F5F7FB;
+      --bg-panel:    #EDF2F8;
+      --bg-card:     #FFFFFF;
+      --border:      #C9D5E3;
+      --text-primary:#132033;
+      --text-dim:    #6F8095;
+      --text-mid:    #425469;
+      --mono:        'JetBrains Mono', monospace;
+      --sans:        'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      max-height: 297mm;
+      margin: 0 auto;
+      padding: 14mm 15mm;
+      page-break-after: always;
+      page-break-inside: avoid;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── RUNNING HEADER ── */
+    .running-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 5px;
+      margin-bottom: 18px;
+      font-family: var(--mono);
+      font-size: 7pt;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .running-header .rh-title { color: var(--gold); }
+    .running-header .rh-page  { color: var(--text-dim); }
+
+    /* ── RUNNING FOOTER ── */
+    .running-footer {
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      position: relative;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 6.5pt;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-family: var(--mono);
+      font-size: 7pt;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── PAGE TITLE ── */
+    .page-title {
+      font-size: 18pt;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    .page-title span { color: var(--cyan); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 0 rgba(18, 32, 51, 0.04);
+      page-break-inside: avoid;
+    }
+    .card-title {
+      font-family: var(--mono);
+      font-size: 7.5pt;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 5px;
+    }
+    .card p {
+      font-size: 8.5pt;
+      color: var(--text-mid);
+      line-height: 1.65;
+    }
+
+    /* ── GRID ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+
+    /* ── EQUATION BOX ── */
+    .eq-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+    .eq-name {
+      font-family: var(--mono);
+      font-size: 7pt;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .eq-formula {
+      font-family: var(--mono);
+      font-size: 9pt;
+      color: var(--cyan);
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .eq-desc {
+      font-size: 7.5pt;
+      color: var(--text-mid);
+      line-height: 1.55;
+    }
+
+    /* ── STAT CHIP ── */
+    .stat-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 14px;
+      text-align: center;
+      min-width: 60px;
+      box-shadow: 0 1px 0 rgba(18, 32, 51, 0.04);
+    }
+    .stat-chip .val {
+      font-family: var(--mono);
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--cyan);
+      line-height: 1;
+    }
+    .stat-chip .lbl {
+      font-family: var(--mono);
+      font-size: 6pt;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    /* ── REFERENCE ENTRY ── */
+    .ref-entry {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      page-break-inside: avoid;
+    }
+    .ref-entry:last-child { border-bottom: none; }
+    .ref-num {
+      font-family: var(--mono);
+      font-size: 7pt;
+      color: var(--gold);
+      min-width: 22px;
+      padding-top: 1px;
+    }
+    .ref-body { font-size: 8pt; color: var(--text-mid); line-height: 1.55; }
+    .ref-body strong { color: var(--text-primary); font-weight: 600; }
+
+    /* ── TABLE ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8pt;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+    }
+    thead tr {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--gold);
+    }
+    thead th {
+      font-family: var(--mono);
+      font-size: 6.5pt;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      padding: 7px 10px;
+      text-align: left;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td {
+      padding: 7px 10px;
+      color: var(--text-mid);
+      font-family: var(--mono);
+      font-size: 7.5pt;
+    }
+    tbody td:first-child { color: var(--cyan); }
+    .tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 6pt;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    /* ── CHAPTER GRID ── */
+    .ch-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 10px;
+      box-shadow: 0 1px 0 rgba(18, 32, 51, 0.04);
+    }
+    .ch-num {
+      font-family: var(--mono);
+      font-size: 6.5pt;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+    .ch-title {
+      font-size: 8pt;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 2px 0 1px;
+    }
+    .ch-tag {
+      font-family: var(--mono);
+      font-size: 6pt;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── COVER-SPECIFIC ── */
+    .cover-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 7pt;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      border-radius: 3px;
+      padding: 3px 10px;
+      margin-bottom: 28px;
+    }
+    .cover-headline {
+      font-size: 36pt;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      margin-bottom: 6px;
+    }
+    .cover-headline .hl-cyan { color: var(--cyan); }
+    .cover-headline .hl-gold { color: var(--gold); }
+    .cover-sub {
+      font-size: 10pt;
+      color: var(--text-mid);
+      margin-bottom: 30px;
+      font-weight: 300;
+      letter-spacing: 0.3px;
+    }
+    .cover-divider {
+      width: 48px;
+      height: 3px;
+      background: var(--gold);
+      margin-bottom: 28px;
+      border-radius: 2px;
+    }
+    .cover-tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    .cover-tag {
+      font-family: var(--mono);
+      font-size: 7pt;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 3px 9px;
+    }
+    .cover-author-block {
+      margin-top: auto;
+      padding: 14px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 6px 6px 0;
+    }
+    .cover-author-name {
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .cover-author-role {
+      font-family: var(--mono);
+      font-size: 7.5pt;
+      letter-spacing: 1px;
+      color: var(--text-mid);
+      margin-bottom: 1px;
+    }
+    .cover-author-inst {
+      font-family: var(--mono);
+      font-size: 7pt;
+      letter-spacing: 1px;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    /* ── PHYSICS PAGE SPECIFICS ── */
+    .param-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 8pt;
+    }
+    .param-row:last-child { border-bottom: none; }
+    .param-key {
+      font-family: var(--mono);
+      color: var(--text-mid);
+      font-size: 7.5pt;
+    }
+    .param-val {
+      font-family: var(--mono);
+      color: var(--cyan);
+      font-size: 7.5pt;
+    }
+
+    /* ── LAB PAGE SPECIFICS ── */
+    .lab-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 0 rgba(18, 32, 51, 0.04);
+      page-break-inside: avoid;
+    }
+    .lab-num {
+      font-family: var(--mono);
+      font-size: 6.5pt;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      margin-bottom: 2px;
+    }
+    .lab-title {
+      font-size: 9pt;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+    .lab-obj {
+      font-size: 7.5pt;
+      color: var(--text-mid);
+      line-height: 1.55;
+      margin-bottom: 4px;
+    }
+    .lab-meta {
+      display: flex;
+      gap: 8px;
+    }
+    .lab-meta-chip {
+      font-family: var(--mono);
+      font-size: 6pt;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page {
+        page-break-after: always;
+        page-break-inside: avoid;
+        overflow: hidden;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 1 — COVER
+═══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="rh-title">Interactive Sputtering Simulation</span>
+    <span class="rh-page">1 / 6</span>
+  </div>
+
+  <div class="cover-badge">Academic Edition · Version 1 · Educational Use</div>
+
+  <div class="cover-headline">
+    INTERACTIVE<br>
+    <span class="hl-cyan">SPUTTERING</span><br>
+    SIMULATION
+  </div>
+  <div class="cover-sub">
+    A browser-based reduced-order magnetron PVD simulator for
+    undergraduate and postgraduate thin-film science education.
+  </div>
+  <div class="cover-divider"></div>
+
+  <div class="cover-tag-row">
+    <span class="cover-tag">Yamamura–Bohdansky Yield Model</span>
+    <span class="cover-tag">Reduced-Order Ion Transport</span>
+    <span class="cover-tag">Thompson Energy Sampling</span>
+    <span class="cover-tag">Three Growth Modes</span>
+    <span class="cover-tag">Reactive Sputtering</span>
+    <span class="cover-tag">Co-Sputtering · 3 Guns</span>
+    <span class="cover-tag">14-Chapter Tutorial</span>
+    <span class="cover-tag">5 Structured Lab Modules</span>
+    <span class="cover-tag">CSV Export · Instructor Guide</span>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-chip"><div class="val">8</div><div class="lbl">Materials</div></div>
+    <div class="stat-chip"><div class="val">3</div><div class="lbl">Guns</div></div>
+    <div class="stat-chip"><div class="val">3</div><div class="lbl">Growth Modes</div></div>
+    <div class="stat-chip"><div class="val">14</div><div class="lbl">Tutorial Chapters</div></div>
+    <div class="stat-chip"><div class="val">5</div><div class="lbl">Lab Modules</div></div>
+    <div class="stat-chip"><div class="val">60</div><div class="lbl">fps Physics</div></div>
+    <div class="stat-chip"><div class="val">0</div><div class="lbl">Installation</div></div>
+  </div>
+
+  <div style="margin-bottom:18px;">
+    <div class="section-label">Deployment</div>
+    <div class="card">
+      <p>
+        Launch <span style="font-family:var(--mono);color:var(--cyan);">index.html</span>
+        in any modern browser — Chrome, Firefox, Edge, or Safari.
+        No server, no installation, no dependencies beyond a browser.
+        Runs fully offline. Tested on Windows, macOS, and Linux.
+        Suitable for computer-lab sessions, self-directed study, and
+        remote coursework delivery.
+      </p>
+    </div>
+  </div>
+
+  <div class="cover-author-block">
+    <div class="cover-author-name">Dr. Balaji Gururajan</div>
+    <div class="cover-author-role">Assistant Professor · Department of Electrical Engineering</div>
+    <div class="cover-author-inst">Yuan Ze University · Taiwan</div>
+  </div>
+
+  <div class="running-footer">
+    <span>Dr. Balaji Gururajan · Yuan Ze University · Taiwan</span>
+    <span>Interactive Sputtering Simulation · Version 1 · Educational Use · All Rights Reserved</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 2 — PHYSICS ENGINE
+═══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="rh-title">Interactive Sputtering Simulation · Physics Engine</span>
+    <span class="rh-page">2 / 6</span>
+  </div>
+
+  <div class="page-title">PHYSICS <span>ENGINE</span></div>
+
+  <div class="section-label">Core Models</div>
+
+  <div class="eq-box">
+    <div class="eq-name">Yamamura–Bohdansky Sputtering Yield</div>
+    <div class="eq-formula">Y(E) = Q · S_n*(E) · (1 − (E_th / E)^(2/3))^0.25</div>
+    <div class="eq-desc">
+      Semi-empirical yield formula valid from threshold to keV regime. Q is a material-dependent
+      constant encoding binding energy and mass ratio. S_n*(E) is the reduced nuclear stopping
+      cross-section computed from the universal Lindhard–Scharff–Schiott (LSS) function.
+      E_th ≈ U_s / γ where γ = 4M_1M_2/(M_1+M_2)² is the kinematic factor.
+      Implemented for all 8 target materials with tabulated Q, U_s, E_th values.
+    </div>
+  </div>
+
+  <div class="eq-box">
+    <div class="eq-name">Cosine-Power Emission Distribution</div>
+    <div class="eq-formula">f(θ) ∝ cos^n(θ)  where  n = 1 + 0.6 · (E/500)^0.4</div>
+    <div class="eq-desc">
+      Angular distribution of sputtered atoms from the target surface under normal Ar⁺ incidence.
+      Pure cosine (n = 1) at low ion energies transitions to overcosine (n > 1) at higher energies,
+      consistent with molecular dynamics and experimental observations. Controls the radial
+      deposition footprint and uniformity profile on the substrate.
+    </div>
+  </div>
+
+  <div class="eq-box">
+    <div class="eq-name">Thompson–Sigmund Energy Distribution</div>
+    <div class="eq-formula">f(E_s) ∝ E_s / (E_s + U_s)³  ·  (1 − √((E_s + U_s) / E_max))</div>
+    <div class="eq-desc">
+      Energy spectrum of sputtered atoms at the target surface, derived from the linear collision
+      cascade model. U_s is the surface binding energy. E_max = γE − U_s is the maximum
+      transferable energy. Sampled stochastically each frame to assign initial kinetic energies
+      to emitted atom packets.
+    </div>
+  </div>
+
+  <div class="eq-box">
+    <div class="eq-name">Mean Free Path — Kinetic Theory</div>
+    <div class="eq-formula">λ = kT / (√2 · π · d_Ar² · P)</div>
+    <div class="eq-desc">
+      Hard-sphere kinetic theory MFP for Ar at process temperature T and pressure P.
+      d_Ar = 3.7 × 10⁻¹⁰ m. k = 1.38 × 10⁻²³ J/K. Evaluated per frame from current
+      pressure and gas mixture (Ar + O₂). The scattering ratio d/λ drives the transport
+      regime classification: Ballistic (d/λ < 0.5), Moderate (0.5–2.0), High (> 2.0).
+      Mixed Ar/O₂ atmospheres use a mole-fraction-weighted cross-section.
+    </div>
+  </div>
+
+  <div class="eq-box">
+    <div class="eq-name">Lorentz E×B Electron Drift — Magnetron Principle</div>
+    <div class="eq-formula">v_drift = (E × B) / B²    r_L = m_e · v_⊥ / (e · B)</div>
+    <div class="eq-desc">
+      Secondary electrons emitted from the target are trapped in crossed electric and magnetic
+      fields, executing cycloidal drift trajectories above the target surface. The closed drift
+      path defines the racetrack erosion groove. Increased ionisation in the racetrack region
+      raises local plasma density, sustaining discharge at lower pressures (1–10 mTorr) than
+      a diode configuration.
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:4px;">Particle Transport Implementation</div>
+  <div class="grid-2" style="gap:8px;">
+    <div class="card">
+      <div class="card-title">Ion Dynamics</div>
+      <p>Ar⁺ ions spawn at the plasma–sheath boundary, accelerate toward the cathode
+      under the sheath electric field with E×B lateral wobble. Impact is detected via
+      a swept collision check (no tunnelling at high simulation speed). Ion energy at
+      impact determines sputtering yield and ejected atom energy via Thompson sampling.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Atom Transport &amp; Deposition</div>
+      <p>Sputtered atom packets travel upward with cosine-sampled angle and
+      Thompson-sampled energy. Each frame computes scattering probability from λ.
+      Successful substrate impacts are distributed across bins via a Gaussian kernel
+      with racetrack shoulder rings. Sticking coefficient applied probabilistically.
+      Particle arrays are ceiling-bounded to prevent frame rate collapse.</p>
+    </div>
+  </div>
+
+  <div class="running-footer">
+    <span>Dr. Balaji Gururajan · Yuan Ze University · Taiwan</span>
+    <span>Interactive Sputtering Simulation · Version 1 · Educational Use</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 3 — MATERIAL LIBRARY & SIMULATION PARAMETERS
+═══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="rh-title">Interactive Sputtering Simulation · Material Library</span>
+    <span class="rh-page">3 / 6</span>
+  </div>
+
+  <div class="page-title">MATERIAL LIBRARY &amp; <span>PARAMETERS</span></div>
+
+  <div class="section-label">Target Material Database — Yamamura Parameters</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Material</th>
+        <th>Symbol</th>
+        <th>Binding Energy U_s (eV)</th>
+        <th>Threshold E_th (eV)</th>
+        <th>Yamamura Q</th>
+        <th>Yield @ 500 eV Ar⁺</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Copper</td><td>Cu</td><td>3.49</td><td>17</td><td>0.356</td><td>~2.3</td></tr>
+      <tr><td>Aluminium</td><td>Al</td><td>3.36</td><td>13</td><td>0.241</td><td>~1.0</td></tr>
+      <tr><td>Titanium</td><td>Ti</td><td>4.85</td><td>20</td><td>0.179</td><td>~0.6</td></tr>
+      <tr><td>Tantalum</td><td>Ta</td><td>8.10</td><td>33</td><td>0.100</td><td>~0.3</td></tr>
+      <tr><td>Zinc</td><td>Zn</td><td>1.35</td><td>14</td><td>0.208</td><td>~3.8</td></tr>
+      <tr><td>Tin</td><td>Sn</td><td>3.12</td><td>16</td><td>0.290</td><td>~1.9</td></tr>
+      <tr><td>Tungsten</td><td>W</td><td>8.83</td><td>40</td><td>0.128</td><td>~0.4</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">Configurable Process Parameters</div>
+  <div class="grid-2" style="gap:10px; margin-bottom:14px;">
+    <div class="card">
+      <div class="card-title">Power &amp; Discharge</div>
+      <div class="param-row"><span class="param-key">Gun power per source</span><span class="param-val">80 – 500 W</span></div>
+      <div class="param-row"><span class="param-key">Power mode</span><span class="param-val">DC / RF selectable</span></div>
+      <div class="param-row"><span class="param-key">Active guns</span><span class="param-val">1 – 3 independent</span></div>
+      <div class="param-row"><span class="param-key">Discharge voltage (est.)</span><span class="param-val">200 – 700 V</span></div>
+      <div class="param-row"><span class="param-key">Ion energy at target</span><span class="param-val">50 – 1000 eV</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Geometry</div>
+      <div class="param-row"><span class="param-key">Target diameter</span><span class="param-val">2 – 6 inches</span></div>
+      <div class="param-row"><span class="param-key">Substrate diameter</span><span class="param-val">2 – 8 inches</span></div>
+      <div class="param-row"><span class="param-key">Target–substrate distance</span><span class="param-val">5 – 25 cm</span></div>
+      <div class="param-row"><span class="param-key">Substrate rotation</span><span class="param-val">Continuous (speed-scaled)</span></div>
+      <div class="param-row"><span class="param-key">Uniformity calculation</span><span class="param-val">Live radial profile</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Gas &amp; Pressure</div>
+      <div class="param-row"><span class="param-key">Working pressure</span><span class="param-val">0.5 – 30 mTorr</span></div>
+      <div class="param-row"><span class="param-key">Gas composition</span><span class="param-val">Ar / Ar+O₂ mixture</span></div>
+      <div class="param-row"><span class="param-key">O₂ fraction</span><span class="param-val">0 – 50 %</span></div>
+      <div class="param-row"><span class="param-key">MFP range (displayed)</span><span class="param-val">~3 mm – 200 mm</span></div>
+      <div class="param-row"><span class="param-key">Transport regime</span><span class="param-val">Ballistic / Moderate / High</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Film Growth</div>
+      <div class="param-row"><span class="param-key">Growth mode</span><span class="param-val">FM / VW / SK / Auto</span></div>
+      <div class="param-row"><span class="param-key">Lattice mismatch (SK)</span><span class="param-val">0 – 15 %</span></div>
+      <div class="param-row"><span class="param-key">Surface mobility</span><span class="param-val">Low / Medium / High</span></div>
+      <div class="param-row"><span class="param-key">Thickness target</span><span class="param-val">1 – 5000 nm (auto-pause)</span></div>
+      <div class="param-row"><span class="param-key">Simulation speed</span><span class="param-val">0.5× – 5.0×</span></div>
+    </div>
+  </div>
+
+  <div class="section-label">Reactive &amp; Co-Sputtering Capabilities</div>
+  <div class="grid-2" style="gap:10px;">
+    <div class="card">
+      <div class="card-title">Reactive Sputtering (Ar / O₂)</div>
+      <p>O₂ partial pressure modifies target poisoning level dynamically. Sputtering yield
+      decreases as oxide forms on the target surface. Hysteresis indicator shows that
+      return to metallic mode requires O₂ fraction below the onset value — faithfully
+      reproducing the Berg hysteresis loop. RF mode shows reduced poisoning sensitivity
+      relative to DC.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Co-Sputtering — 3 Independent Guns</div>
+      <p>Up to three guns operate simultaneously with independent material and power
+      settings. Film composition is tracked proportionally using per-source yield values.
+      Alloy fraction readout updates in real time. Demonstrates why equal power does
+      not equal equal composition due to yield differences — a key industrial concept
+      for ITO, Cu-Al, and multi-component alloy deposition.</p>
+    </div>
+  </div>
+
+  <div class="running-footer">
+    <span>Dr. Balaji Gururajan · Yuan Ze University · Taiwan</span>
+    <span>Interactive Sputtering Simulation · Version 1 · Educational Use</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 4 — TUTORIAL CURRICULUM & LAB MODULES
+═══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="rh-title">Interactive Sputtering Simulation · Curriculum</span>
+    <span class="rh-page">4 / 6</span>
+  </div>
+
+  <div class="page-title">TUTORIAL CURRICULUM &amp; <span>LAB MODULES</span></div>
+
+  <div class="section-label">14-Chapter Tutorial — Sequential Learning Pathway</div>
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="ch-item"><div class="ch-num">01</div><div class="ch-title">Why Thin Films?</div><div class="ch-tag">Foundation</div></div>
+    <div class="ch-item"><div class="ch-num">02</div><div class="ch-title">Vacuum Science</div><div class="ch-tag">Pressure &amp; Pumps</div></div>
+    <div class="ch-item"><div class="ch-num">03</div><div class="ch-title">Why Argon?</div><div class="ch-tag">Gas Selection</div></div>
+    <div class="ch-item"><div class="ch-num">04</div><div class="ch-title">What is Sputtering?</div><div class="ch-tag">Introduction</div></div>
+    <div class="ch-item"><div class="ch-num">05</div><div class="ch-title">Chamber Components</div><div class="ch-tag">Hardware</div></div>
+    <div class="ch-item"><div class="ch-num">06</div><div class="ch-title">Plasma Formation</div><div class="ch-tag">DC &amp; RF</div></div>
+    <div class="ch-item"><div class="ch-num">07</div><div class="ch-title">Magnetron Design</div><div class="ch-tag">E×B Drift</div></div>
+    <div class="ch-item"><div class="ch-num">08</div><div class="ch-title">Sputtering Yield</div><div class="ch-tag">Bohdansky</div></div>
+    <div class="ch-item"><div class="ch-num">09</div><div class="ch-title">Mean Free Path</div><div class="ch-tag">Gas Transport</div></div>
+    <div class="ch-item"><div class="ch-num">10</div><div class="ch-title">Film Uniformity</div><div class="ch-tag">Deposition</div></div>
+    <div class="ch-item"><div class="ch-num">11</div><div class="ch-title">Reactive Sputtering</div><div class="ch-tag">TiN &amp; Hysteresis</div></div>
+    <div class="ch-item"><div class="ch-num">12</div><div class="ch-title">Co-Sputtering</div><div class="ch-tag">Multi-Gun</div></div>
+    <div class="ch-item"><div class="ch-num">13</div><div class="ch-title">Film Growth Modes</div><div class="ch-tag">FM · VW · SK</div></div>
+    <div class="ch-item"><div class="ch-num">14</div><div class="ch-title">Film Characterisation</div><div class="ch-tag">Metrology</div></div>
+  </div>
+  <div style="margin-bottom:16px; font-size:7.5pt; color:var(--text-dim); font-family:var(--mono);">
+    Each chapter includes: physics explanation · animated SVG diagrams · governing equations · real-world reference with peer-reviewed citation
+  </div>
+
+  <div class="section-label">5 Structured Virtual Lab Modules</div>
+
+  <div class="lab-card">
+    <div class="lab-num">LAB 01</div>
+    <div class="lab-title">Pressure vs. Transport Regime</div>
+    <div class="lab-obj">Vary working pressure from 1.5 to 18 mTorr and observe the transition from ballistic to high-scattering transport. Measure deposition rate, scattering ratio d/λ, and radial uniformity at each pressure point. Export time-series CSV and identify the crossover pressure where d/λ = 1.</div>
+    <div class="lab-meta"><span class="lab-meta-chip">Variable: Pressure</span><span class="lab-meta-chip">~30 min</span><span class="lab-meta-chip">CSV export required</span></div>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-num">LAB 02</div>
+    <div class="lab-title">Sputtering Yield vs. Power &amp; Material</div>
+    <div class="lab-obj">Compare yield response across Cu, Al, Zn, W, and Ta as gun power increases from 100 W to 500 W. Quantify the role of binding energy and mass ratio in determining yield. Identify which material shows the steepest power-yield gradient and explain using the Yamamura formula.</div>
+    <div class="lab-meta"><span class="lab-meta-chip">Variable: Power + Material</span><span class="lab-meta-chip">~35 min</span><span class="lab-meta-chip">Multi-run comparison</span></div>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-num">LAB 03</div>
+    <div class="lab-title">Geometry Optimisation for Uniformity</div>
+    <div class="lab-obj">Systematically vary target diameter, substrate diameter, and target–substrate distance to minimise non-uniformity percentage. Record the radial profile CSV at each condition. Identify the geometry combination that achieves the best uniformity and rationalise using the cosine emission footprint.</div>
+    <div class="lab-meta"><span class="lab-meta-chip">Variable: Geometry</span><span class="lab-meta-chip">~40 min</span><span class="lab-meta-chip">Radial profile analysis</span></div>
+  </div>
+
+  <div class="lab-card">
+    <div class="lab-num">LAB 04</div>
+    <div class="lab-title">Reactive Sputtering Hysteresis</div>
+    <div class="lab-obj">Increase O₂ fraction incrementally and record yield and deposition rate. Identify the poisoning onset point. Then reduce O₂ and record the return path. Map the full hysteresis loop and compare DC vs. RF mode behaviour. Discuss implications for process control in TiN and ZnO deposition.</div>
+    <div class="lab-meta"><span class="lab-meta-chip">Variable: O₂ fraction</span><span class="lab-meta-chip">~35 min</span><span class="lab-meta-chip">Hysteresis mapping</span></div>
+  </div>
+
+  <div class="lab-card" style="page-break-inside: avoid; page-break-before: avoid;">
+    <div class="lab-num">LAB 05</div>
+    <div class="lab-title">Co-Sputtering Composition Control</div>
+    <div class="lab-obj">Use two and three active guns (Cu + Al, then Cu + Al + Zn) and vary relative power settings. Predict the expected film composition from yield ratios before each run. Compare prediction to simulator output. Determine the power ratio required to achieve a 50:50 Cu:Al film.</div>
+    <div class="lab-meta"><span class="lab-meta-chip">Variable: Multi-gun power</span><span class="lab-meta-chip">~40 min</span><span class="lab-meta-chip">Composition tracking</span></div>
+  </div>
+
+  <div class="running-footer">
+    <span>Dr. Balaji Gururajan · Yuan Ze University · Taiwan</span>
+    <span>Interactive Sputtering Simulation · Version 1 · Educational Use</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 5 — FILM GROWTH MODES & PEDAGOGICAL FEATURES
+═══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="rh-title">Interactive Sputtering Simulation · Film Growth &amp; Features</span>
+    <span class="rh-page">5 / 6</span>
+  </div>
+
+  <div class="page-title">FILM GROWTH MODES &amp; <span>FEATURES</span></div>
+
+  <div class="section-label">Three Implemented Growth Modes</div>
+  <div class="grid-3" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title" style="color:var(--cyan);">Frank–van der Merwe</div>
+      <p style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Layer-by-layer growth.</strong>
+      High surface mobility. Each monolayer completes before the next nucleates.
+      Produces atomically flat, epitaxial films. Simulator shows sequential
+      layer filling with uniform substrate coverage.</p>
+      <p><span style="font-family:var(--mono);font-size:6.5pt;color:var(--text-dim);">
+      Condition: E_adsorption > E_adhesion · Lattice mismatch ~ 0%</span></p>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--gold);">Volmer–Weber</div>
+      <p style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Island growth.</strong>
+      Low surface mobility. Atoms prefer bonding to each other over the substrate.
+      Random 3D islands nucleate and grow before coalescence.
+      Simulator renders discrete nucleation sites that merge into a continuous film.</p>
+      <p><span style="font-family:var(--mono);font-size:6.5pt;color:var(--text-dim);">
+      Condition: E_adhesion > E_adsorption · High surface energy mismatch</span></p>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--green);">Stranski–Krastanov</div>
+      <p style="margin-bottom:6px;"><strong style="color:var(--text-primary);">Layer then islands.</strong>
+      Flat wetting layers form first, then accumulated strain from lattice mismatch
+      drives 3D island nucleation. Simulator transitions mid-run at the
+      critical thickness controlled by the lattice mismatch slider.</p>
+      <p><span style="font-family:var(--mono);font-size:6.5pt;color:var(--text-dim);">
+      Condition: Small lattice mismatch initially · Strain energy accumulates</span></p>
+    </div>
+  </div>
+
+  <div class="section-label">Key Pedagogical Features</div>
+  <div class="grid-2" style="gap:10px; margin-bottom:14px;">
+    <div class="card">
+      <div class="card-title">AI Recipe Advisor</div>
+      <p>An integrated advisory engine evaluates the current parameter set and flags
+      configurations unlikely to produce a physically meaningful result. It suggests
+      corrected recipes with predicted transport regime, uniformity percentage, and
+      growth mode. Students compare their own prediction to the advisor output — a
+      structured pre-lab exercise in process reasoning.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Thickness Target with Auto-Pause</div>
+      <p>Students set a target film thickness in nm. A real-time progress bar tracks
+      deposition toward the target. The simulator auto-pauses when the target is
+      reached and displays an achievement summary: final thickness, elapsed time,
+      uniformity percentage, and average deposition rate. Resume continues
+      deposition beyond the target.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">CSV Data Export</div>
+      <p>Three export formats: time-series log (rate, yield, MFP, uniformity per
+      second), radial thickness profile (binned substrate cross-section), and
+      process summary (all conditions at end of run). Enables quantitative
+      post-session data analysis, graphing assignments, and direct comparison
+      across experimental conditions.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Instructor Guide Download</div>
+      <p>A one-click plain-text instructor guide generates dynamically from the
+      lab module database. It includes learning objectives, expected trends,
+      procedure steps, reflection questions with model answers, and a 10-mark
+      rubric per module. Generated at runtime — always matches the current
+      version of the lab modules.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Real-World Reference Callouts</div>
+      <p>Each of the 14 tutorial chapters contains a highlighted callout box linking
+      the simulated concept to a published experimental result or industry practice,
+      with a peer-reviewed citation. Examples include the IBM Cu interconnect paper
+      (Edelstein 1999), the Berg reactive sputtering hysteresis paper (1988),
+      and the Thornton zone model (1974).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Reveal-on-Demand Expected Results</div>
+      <p>Each lab module contains a hidden "What you should observe" panel that
+      students unlock after completing their own observations. The panel provides
+      the expected trend, the quantitative crossover value (e.g. d/λ = 1 at ~6 mTorr),
+      and the physical mechanism in one paragraph. Prevents premature answer
+      exposure while providing immediate feedback after the experiment.</p>
+    </div>
+  </div>
+
+  <div class="section-label">Process Diagnostics Panel</div>
+  <div class="card">
+    <p>Live status bar displays: discharge voltage (V) · ion current density (mA/cm²) ·
+    ion energy (eV) · sputtering yield (atoms/ion) · illustrative yield (transport-corrected) ·
+    mean free path λ (cm) · scattering ratio d/λ · transport regime label ·
+    deposition rate (arb. units/s) · film thickness (nm) · non-uniformity (%) ·
+    growth mode · sticking coefficient · total process time.
+    All values update at the chart refresh rate (approximately every 1 second of simulation time).
+    </p>
+  </div>
+
+  <div class="running-footer">
+    <span>Dr. Balaji Gururajan · Yuan Ze University · Taiwan</span>
+    <span>Interactive Sputtering Simulation · Version 1 · Educational Use</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 6 — SCIENTIFIC REFERENCES & CITATION
+═══════════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="rh-title">Interactive Sputtering Simulation · References</span>
+    <span class="rh-page">6 / 6</span>
+  </div>
+
+  <div class="page-title">SCIENTIFIC <span>REFERENCES</span></div>
+
+  <div class="section-label">Foundational Physics — Sputtering Yield Theory</div>
+  <div style="margin-bottom:14px;">
+    <div class="ref-entry"><div class="ref-num">[1]</div><div class="ref-body"><strong>Yamamura, Y. &amp; Tawara, H.</strong> — Energy dependence of ion-induced sputtering yields from monoatomic solids at normal incidence. <em>Atomic Data and Nuclear Data Tables</em> 62(2), 149–253 (1996). Primary source for all Q, U_s, and E_th parameters in the material database.</div></div>
+    <div class="ref-entry"><div class="ref-num">[2]</div><div class="ref-body"><strong>Bohdansky, J.</strong> — A universal relation for the sputtering yield of monatomic solids at normal ion incidence. <em>Nuclear Instruments and Methods in Physics Research B</em> 2(1–3), 587–591 (1984). Semi-empirical formula basis.</div></div>
+    <div class="ref-entry"><div class="ref-num">[3]</div><div class="ref-body"><strong>Sigmund, P.</strong> — Theory of sputtering I: Sputtering yield of amorphous and polycrystalline targets. <em>Physical Review</em> 184(2), 383–416 (1969). Linear cascade collision model and threshold energy derivation.</div></div>
+    <div class="ref-entry"><div class="ref-num">[4]</div><div class="ref-body"><strong>Thompson, M.W.</strong> — The energy spectrum of ejected atoms during the high energy sputtering of gold. <em>Philosophical Magazine</em> 18(152), 377–414 (1968). Thompson energy distribution used for sputtered atom energy sampling.</div></div>
+  </div>
+
+  <div class="section-label">Magnetron Sputtering &amp; Plasma Physics</div>
+  <div style="margin-bottom:14px;">
+    <div class="ref-entry"><div class="ref-num">[5]</div><div class="ref-body"><strong>Lieberman, M.A. &amp; Lichtenberg, A.J.</strong> — <em>Principles of Plasma Discharges and Materials Processing</em>, 2nd ed. Wiley-Interscience, 2005. Sheath physics, E×B drift, Paschen curve, and discharge voltage models.</div></div>
+    <div class="ref-entry"><div class="ref-num">[6]</div><div class="ref-body"><strong>Kelly, P.J. &amp; Arnell, R.D.</strong> — Magnetron sputtering: a review of recent developments and applications. <em>Vacuum</em> 56(3), 159–172 (2000). Magnetron design, racetrack erosion, and unbalanced magnetron configurations.</div></div>
+    <div class="ref-entry"><div class="ref-num">[7]</div><div class="ref-body"><strong>Rossnagel, S.M.</strong> — Magnetron sputtering. <em>IBM Journal of Research and Development</em> 43(1/2), 163–179 (1999). Ionised PVD, E×B drift review, and process pressure considerations.</div></div>
+  </div>
+
+  <div class="section-label">Film Growth, Transport &amp; Characterisation</div>
+  <div style="margin-bottom:14px;">
+    <div class="ref-entry"><div class="ref-num">[8]</div><div class="ref-body"><strong>Thornton, J.A.</strong> — Influence of apparatus geometry and deposition conditions on the structure and topography of thick sputtered coatings. <em>Journal of Vacuum Science and Technology</em> 11(4), 666–670 (1974). Structure zone model relating pressure and temperature to film morphology.</div></div>
+    <div class="ref-entry"><div class="ref-num">[9]</div><div class="ref-body"><strong>Bauer, E.</strong> — Phänomenologische Theorie der Kristallabscheidung an Oberflächen. <em>Zeitschrift für Kristallographie</em> 110(1–6), 372–394 (1958). Original classification of FM, VW, and SK epitaxial growth modes.</div></div>
+    <div class="ref-entry"><div class="ref-num">[10]</div><div class="ref-body"><strong>Ohring, M.</strong> — <em>Materials Science of Thin Films: Deposition and Structure</em>, 2nd ed. Academic Press, 2002. Comprehensive reference for nucleation theory, growth modes, and film characterisation.</div></div>
+    <div class="ref-entry"><div class="ref-num">[11]</div><div class="ref-body"><strong>Berg, S. et al.</strong> — Hysteresis effects in reactive sputtering. <em>Journal of Applied Physics</em> 63(3), 887–891 (1988). Experimental demonstration of reactive sputtering hysteresis loop for Ti in Ar/N₂.</div></div>
+    <div class="ref-entry"><div class="ref-num">[12]</div><div class="ref-body"><strong>Depla, D. &amp; Mahieu, S.</strong> (eds.) — <em>Reactive Sputter Deposition</em>. Springer Series in Materials Science, Vol. 109, 2008. Reactive gas modelling, target poisoning mechanisms, and process window control.</div></div>
+  </div>
+
+  <div class="section-label">How to Cite This Software</div>
+  <div class="eq-box" style="border-left-color:var(--cyan);">
+    <div class="eq-name">Citation</div>
+    <div class="eq-formula" style="color:var(--text-primary); font-size:8pt; font-family:var(--mono);">
+      Gururajan, B. (2025). Interactive Sputtering Simulation (Version 1)<br>
+      [Educational Software]. Department of Electrical Engineering,<br>
+      Yuan Ze University, Taiwan.
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:8px;">Model Limitations</div>
+  <div class="card">
+    <p>This simulator is built for learning and intuition, not fab-grade process fitting.
+    The discharge model is a parametric fit — not a full PIC or fluid plasma solver.
+    Atom trajectories use a reduced-order cosine emission and Thompson energy sampler,
+    not molecular dynamics or SRIM/TRIM. Deposition rate and film thickness numbers are
+    scaled for classroom time using internal calibration constants and will not match
+    absolute fab measurements. The illustrative yield applies empirical transport and
+    sticking factors on top of the Yamamura formula — treat it as a trend indicator,
+    not a quoted yield. Students moving to real sputter tools should treat all absolute
+    numbers as qualitative guides only.</p>
+  </div>
+
+  <div class="running-footer">
+    <span>Dr. Balaji Gururajan · Yuan Ze University · Taiwan</span>
+    <span>Interactive Sputtering Simulation · Version 1 · Educational Use · All Rights Reserved</span>
+  </div>
+</div>
+
+</body>
+</html>

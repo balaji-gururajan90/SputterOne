@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Sputtering Simulation - Dr. Balaji Gururajan</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script>
+window.onerror=function(msg,url,l,c,err){
+  var d=document.createElement('div');
+  d.style="position:fixed;top:8%;left:8%;width:84%;padding:18px;background:#6b0000;color:#fff;font-size:13px;z-index:9999;border-radius:4px;font-family:monospace;";
+  d.innerHTML="<b>JS ERROR:</b> "+msg+"<br>Line "+l+"<br>"+(err?err.stack:"");
+  document.body.appendChild(d);return false;
+};
+</script>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ----------------------------------------------
+   P&ID LAYOUT SYSTEM
+   Kurt Lesker engineering diagram aesthetic
+   Canvas: dark (unchanged) - UI: COMSOL grey
+---------------------------------------------- */
+
+/* -- P&ID Header tag -- */
+.pid-tag {
+  width: 34px; height: 34px;
+  border: 2px solid var(--accent-cyan);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--accent-cyan);
+  text-align: center; line-height: 1.2;
+  flex-shrink: 0;
+}
+
+/* -- Header nav links -- */
+.header-nav-links {
+  display: flex; align-items: center; gap: 2px;
+  border-left: 1px solid var(--border-bright);
+  padding-left: 14px;
+}
+.header-nav-link {
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 5px 9px;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+}
+.header-nav-link:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* -- Header blocks -- */
+.header-author-block { text-align: right; }
+.header-author {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 1px;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+}
+.header-rights {
+  font-family: var(--font-mono);
+  font-size: 8px; color: var(--text-dim);
+  margin-top: 1px;
+}
+.header-btn {
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.5px;
+  background: var(--bg-section);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-bright);
+  padding: 5px 11px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.header-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* -- Status HUD -- */
+.status-hud {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 1px;
+  padding: 4px 10px;
+  border: 1px solid var(--accent-green);
+  border-radius: var(--radius);
+  color: var(--accent-green);
+  background: rgba(90,170,114,0.07);
+}
+
+/* -- Status bar items -- */
+.sb-item { display: inline-flex; align-items: center; gap: 4px; }
+.sb-sep  { color: var(--text-dim); margin: 0 4px; }
+.sb-val  { font-family: var(--font-mono); }
+.sb-val span { color: var(--accent-yellow); }
+
+/* -- Section headers (sidebar) -- */
+.sb-section { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); }
+.sb-section-header {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+/* -- P&ID instrument tag (small circle badge) -- */
+.pid-instrument-tag {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 16px;
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  padding: 0 5px;
+  flex-shrink: 0;
+  background: var(--bg-section);
+}
+
+/* -- Diagnostics 2x2 grid -- */
+.diag-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+/* -- Accordion arrow -- */
+.acc-arrow {
+  font-size: 11px; color: var(--text-dim);
+  transition: transform 0.2s;
+}
+.panel.acc-open .acc-arrow { transform: rotate(180deg); color: var(--accent-cyan); }
+
+/* -- Gun cards -- */
+.gun-card {
+  border-left: 3px solid var(--gun-color, var(--accent-cyan));
+  background: rgba(255,255,255,0.02);
+  margin: 0 8px 6px;
+  padding: 7px 8px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.gun-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.gun-tag {
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 2px 7px;
+  border: 1px solid;
+  border-radius: var(--radius);
+}
+.gun-toggle {
+  display: flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text-dim); cursor: pointer;
+}
+.gun-toggle input { margin: 0; }
+.gun-select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-ui); font-size: 11px;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.gun-select option { background: #2a2a2c; }
+.gun-power-row {
+  display: flex; align-items: center; gap: 5px;
+  margin-bottom: 3px;
+}
+.gun-mode-select {
+  flex: 0 0 auto; width: 38px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-family: var(--font-mono); font-size: 9px;
+  padding: 2px 2px;
+  cursor: pointer;
+}
+.gun-mode-select option { background: #2a2a2c; }
+.gun-slider { flex: 1; height: 3px; }
+.gun-power-val {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  min-width: 38px; text-align: right; letter-spacing: 0.5px;
+}
+.gun-yield-row {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text-dim);
+}
+
+/* -- View mode toggle -- */
+.view-toggle-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px 5px;
+  border-bottom: 1px solid var(--border);
+}
+.vt-label {
+  font-family: var(--font-display); font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.view-toggle-btns {
+  display: flex;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius); overflow: hidden;
+}
+.vt-btn {
+  font-family: var(--font-mono); font-size: 9px;
+  padding: 3px 10px;
+  background: transparent; color: var(--text-dim);
+  border: none; cursor: pointer;
+  transition: all 0.15s;
+}
+.vt-btn:first-child { border-right: 1px solid var(--border-bright); }
+.vt-btn.active { background: rgba(74,144,212,0.2); color: var(--accent-cyan); }
+
+/* -- Control rows (gas/pressure sliders) -- */
+.ctrl-row { padding: 5px 12px; }
+.ctrl-label {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-ui); font-size: 10px;
+  font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.ctrl-val {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-primary);
+}
+.pid-slider {
+  width: 100%; height: 3px;
+  -webkit-appearance: none; appearance: none;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+.pid-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  border: 2px solid #1e1e20;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+
+/* -- Toggle rows (vis checkboxes) -- */
+.toggle-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  font-family: var(--font-ui); font-size: 11.5px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.toggle-row:hover { background: var(--bg-hover); color: var(--text-primary); }
+.toggle-row input { margin-left: 6px; accent-color: var(--accent-cyan); pointer-events: none; }
+.challenge-toggle { color: var(--accent-yellow); font-weight: 600; }
+.vis-advanced {
+  border-top: 1px solid var(--border);
+  margin-top: 2px;
+}
+.vis-advanced summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 7px 12px;
+  font-family: var(--font-display);
+  font-size: 8.5px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+}
+.vis-advanced summary::-webkit-details-marker { display: none; }
+.vis-advanced summary::after { content: '>'; color: var(--text-muted); }
+.vis-advanced[open] summary::after { content: '<'; color: var(--accent-cyan); }
+
+/* -- Challenge box -- */
+.challenge-box {
+  background: rgba(200,168,64,0.06);
+  border: 1px solid rgba(200,168,64,0.3);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+.challenge-title {
+  font-family: var(--font-display); font-size: 8.5px;
+  letter-spacing: 1.5px; color: var(--accent-yellow);
+  margin-bottom: 4px; text-transform: uppercase;
+}
+.challenge-box p {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-secondary); margin-bottom: 2px;
+}
+
+/* -- Opacity sliders section -- */
+.opacity-sliders {
+  border-top: 1px solid var(--border);
+  padding: 2px 0 4px;
+}
+
+/* -- Action buttons -- */
+.action-buttons {
+  padding: 10px 10px 12px;
+  display: flex; flex-direction: column; gap: 5px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+.action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.action-btn {
+  font-family: var(--font-display);
+  font-size: 8.5px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 7px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid var(--border-bright);
+  background: var(--bg-section);
+  color: var(--text-secondary);
+  transition: all 0.15s;
+  width: 100%;
+}
+.action-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.advisor-box {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(23, 28, 38, 0.96), rgba(18, 22, 30, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.advisor-box-header {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  margin-bottom: 10px;
+}
+.advisor-controls {
+  display: grid;
+  gap: 8px;
+}
+.advisor-row {
+  display: grid;
+  gap: 6px;
+}
+.advisor-row label {
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.advisor-select,
+.advisor-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(11, 15, 22, 0.92);
+  color: var(--text-primary);
+  padding: 9px 10px;
+  font-size: 12px;
+}
+.advisor-note {
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.advisor-result {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: grid;
+  gap: 8px;
+}
+.advisor-result.hidden {
+  display: none;
+}
+.advisor-status {
+  font-size: 11px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--accent-yellow);
+}
+.advisor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 8px;
+}
+.advisor-metric {
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.advisor-metric-label {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 3px;
+}
+.advisor-metric-value {
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.advisor-explanation {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.advisor-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.btn-blue  { color: var(--accent-cyan);   border-color: rgba(74,144,212,0.4);  background: rgba(74,144,212,0.07); }
+.btn-blue:hover  { background: rgba(74,144,212,0.16); }
+.btn-amber { color: var(--accent-yellow); border-color: rgba(200,168,64,0.4);  background: rgba(200,168,64,0.06); }
+.btn-amber:hover { background: rgba(200,168,64,0.14); }
+.btn-red   { color: var(--accent-red);    border-color: rgba(192,72,72,0.4);   background: rgba(192,72,72,0.06); }
+.btn-red:hover   { background: rgba(192,72,72,0.14); }
+.btn-green { color: var(--accent-green);  border-color: rgba(90,170,114,0.4);  background: rgba(90,170,114,0.06); }
+.btn-green:hover { background: rgba(90,170,114,0.14); }
+.btn-dim   { color: var(--text-dim);      border-color: var(--border); }
+.btn-dim:hover   { color: var(--text-secondary); }
+
+/* -- MAIN split layout -- */
+main {
+  position: relative;
+  overflow: hidden;
+  background: #020408;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#canvas-wrapper {
+  flex: 1;
+  position: relative;
+  width: 100%; height: 100%;
+  /* P&ID instrument border */
+  border: 1px solid rgba(255,255,255,0.12);
+  margin: 4px;
+  box-sizing: border-box;
+}
+
+/* P&ID corner frame labels */
+.pid-frame-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 8.5px; letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  background: rgba(2,4,8,0.75);
+  padding: 2px 7px;
+  z-index: 6;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.pid-frame-tl { top: 0; left: 0; border-right: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.pid-frame-tr { top: 0; right: 0; border-left: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.pid-frame-bl { bottom: 0; left: 0; border-right: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.1); }
+.pid-frame-br { bottom: 0; right: 0; border-left: 1px solid rgba(255,255,255,0.1); border-top: 1px solid rgba(255,255,255,0.1); }
+
+#canvas-container { width: 100%; height: 100%; }
+#canvas-container canvas { display: block; }
+
+/* -- Chart header -- */
+.chart-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* -- Physics readout -- */
+.physics-readout {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.physics-eq {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 400;
+  color: var(--accent-yellow);
+  letter-spacing: 0.3px;
+  margin-top: 6px; margin-bottom: 2px;
+}
+.physics-eq.secondary {
+  font-size: 10px; color: var(--text-dim);
+  margin-top: 3px;
+}
+.physics-meta {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-top: 8px;
+  font-family: var(--font-mono); font-size: 8px;
+  letter-spacing: 0.8px; color: var(--text-dim);
+}
+
+/* -- Bottom bar -- */
+.bottom-bar {
+  grid-column: 1 / 4;
+  grid-row: 2 / 3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #1e1e20;
+  border-top: 2px solid rgba(255,255,255,0.1);
+  z-index: 10;
+}
+
+.bp-col {
+  padding: 6px 12px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  gap: 3px;
+}
+.bp-col:last-child { border-right: none; }
+
+.bp-header {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-display);
+  font-size: 8.5px; font-weight: 700;
+  letter-spacing: 1.8px; text-transform: uppercase;
+  margin-bottom: 3px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.bp-marker { width: 3px; height: 11px; border-radius: 1px; flex-shrink: 0; }
+
+.bp-meta { margin-top: auto; display: flex; flex-direction: column; gap: 3px; }
+.bp-meta-row {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-display); font-size: 8px;
+  letter-spacing: 1px; color: var(--text-dim);
+}
+.bp-meta-row span:last-child { color: var(--text-secondary); }
+
+/* -- Control group (bottom bar) -- */
+.control-group { margin-bottom: 6px; }
+.control-group:last-child { margin-bottom: 0; }
+.control-group label {
+  display: flex; align-items: center; gap: 4px;
+  flex-wrap: wrap;
+  font-family: var(--font-display);
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 3px; cursor: pointer;
+}
+.control-group label span[id] {
+  font-family: var(--font-mono);
+  font-size: 10px; margin-left: auto;
+}
+.control-group input[type="range"] {
+  width: 100%; height: 3px;
+  -webkit-appearance: none; appearance: none;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  border: 2px solid #1e1e20;
+  cursor: pointer;
+}
+#powerSlider::-webkit-slider-thumb  { background: var(--accent-plasma); }
+#magSlider::-webkit-slider-thumb    { background: var(--accent-ion); }
+#densitySlider::-webkit-slider-thumb{ background: var(--accent-green); }
+
+/* Tooltip question mark */
+.tooltip-q {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-dim);
+  font-family: var(--font-ui); font-size: 9px;
+  font-weight: 700;
+  cursor: help;
+  border: 1px solid rgba(255,255,255,0.14);
+  margin-left: 2px;
+  position: relative;
+}
+.tooltip-q:hover::after {
+  content: attr(data-tooltip);
+  position: absolute; bottom: 120%; left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1e;
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  padding: 5px 9px;
+  font-family: var(--font-ui); font-size: 10px;
+  color: var(--text-primary);
+  white-space: normal; max-width: 200px;
+  text-align: left; z-index: 9999;
+  pointer-events: none;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* -- Legend -- */
+.legend-tag {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text-dim);
+}
+
+/* -- Tutorial overlay -- */
+#tutorial-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+}
+#tutorial-overlay.hidden { display: none; }
+.tutorial-box {
+  background: #2a2a2e;
+  border: 1px solid var(--border-bright);
+  border-top: 2px solid var(--accent-cyan);
+  border-radius: var(--radius);
+  padding: 22px 26px; max-width: 400px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.tutorial-box h3 {
+  font-family: var(--font-display); font-size: 12px;
+  font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--accent-cyan);
+  margin-bottom: 10px;
+}
+.tutorial-box p {
+  font-family: var(--font-ui); font-size: 13px;
+  line-height: 1.65; color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+#btn-tut-next {
+  font-family: var(--font-display); font-size: 9.5px;
+  font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; padding: 8px 18px;
+  background: rgba(74,144,212,0.14);
+  border: 1px solid rgba(74,144,212,0.4);
+  border-radius: var(--radius);
+  color: var(--accent-cyan); cursor: pointer;
+  transition: all 0.15s;
+}
+#btn-tut-next:hover { background: rgba(74,144,212,0.24); }
+
+/* -- Highlight (tutorial) -- */
+.highlight {
+  outline: 2px solid var(--accent-yellow);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* -- Info overlay labels -- */
+.info-overlay {
+  position: absolute; top:0;left:0;right:0;bottom:0;
+  pointer-events: none; z-index: 5;
+}
+.label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: rgba(220,235,255,0.7);
+  padding: 3px 9px;
+  border-radius: 2px;
+  background: rgba(2,4,8,0.75);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 2px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(3px);
+  white-space: nowrap;
+}
+#lbl-substrate { left:2%; color:rgba(160,200,255,0.7); border-left-color:rgba(74,144,212,0.7); }
+#lbl-gas       { left:2%; color:rgba(150,190,255,0.4); border-left-color:rgba(150,190,255,0.3); }
+#lbl-plasma    { left:2%; color:rgba(180,140,240,0.65); border-left-color:rgba(155,114,200,0.7); }
+#lbl-target    { left:2%; color:rgba(220,140,80,0.65); border-left-color:rgba(212,118,58,0.7); }
+
+/* -- MFP bar -- */
+#mfp-display-bar {
+  position: absolute; bottom:10px; left:50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-secondary);
+  background: rgba(2,4,8,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px; padding: 3px 10px;
+  z-index: 10; letter-spacing: 0.8px;
+}
+#mfp-display-bar span { color: var(--accent-yellow); }
+
+/* -- Credit box -- */
+.credit-box {
+  position: absolute !important; top:10px !important; left:10px !important;
+  background: rgba(8,10,16,0.88) !important;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: var(--radius) !important;
+  padding: 6px 12px !important; z-index: 10;
+}
+.credit-box h3 {
+  font-family: var(--font-display) !important; font-size: 10px !important;
+  font-weight: 700 !important; letter-spacing: 1px !important;
+  color: var(--accent-cyan) !important; text-shadow: none !important;
+  text-transform: uppercase; margin-bottom: 2px !important;
+}
+.credit-box p {
+  font-size: 9px !important; color: var(--text-secondary) !important;
+  font-family: var(--font-mono) !important;
+}
+
+/* -- Scrollbar -- */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 2px; }
+
+/* -- Light mode -- */
+body.light-mode {
+  --bg-deep:#f0f0f2; --bg-panel:#fafafa; --bg-glass:#f4f4f6;
+  --bg-input:#e8e8ea; --bg-section:#e4e4e6; --bg-hover:#dcdcde;
+  --border:rgba(0,0,0,0.12); --border-bright:rgba(0,0,0,0.24);
+  --accent-cyan:#1a6ab0; --accent-plasma:#c05820;
+  --accent-ion:#6a48a8; --accent-green:#3a8850;
+  --accent-yellow:#a87820; --accent-red:#a03030;
+  --text-primary:#141418; --text-secondary:#484858; --text-dim:#808090;
+}
+body.light-mode #app-header      { background:#e4e4e6; }
+body.light-mode #status-bar      { background:#ebebed; }
+body.light-mode .bottom-bar      { background:#e4e4e6; }
+body.light-mode .sidebar-left,
+body.light-mode .sidebar-right   { background:#fafafa; }
+body.light-mode main             { background:#020408 !important; }
+body.light-mode .gun-select,
+body.light-mode .gun-mode-select { background:#e0e0e2; color:#141418; }
+body.light-mode .gun-select option,
+body.light-mode .gun-mode-select option { background:#fafafa; color:#141418; }
+body.light-mode .status-hud      { background:rgba(58,136,80,0.07); }
+body.light-mode .pid-tag         { border-color:var(--accent-cyan); color:var(--accent-cyan); }
+body.light-mode .pid-instrument-tag { background:#e8e8ea; }
+
+/* transitions */
+body { transition: background-color 0.25s, color 0.25s; }
+.sidebar-left,.sidebar-right,.bottom-bar,#app-header,#status-bar,
+.metric-card,.gun-card,.panel,.bp-col {
+  transition: background-color 0.25s, border-color 0.25s;
+}
+</style>
+</head>
+<body>
+
+<!-- -- HEADER -- -->
+<header id="app-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <img src="img/sputterone-icon.png" alt="SputterOne" style="width:38px;height:38px;object-fit:contain;border-radius:8px;display:block;flex-shrink:0;">
+    <div class="header-brand">
+      <div class="brand-title">Interactive Sputtering Simulation</div>
+<div class="brand-sub">Magnetron PVD | Yamamura-Bohdansky Yield Model | Reduced-order Ion Transport | Version 1 | Educational</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="header-nav-links">
+      <a href="index.html" class="header-nav-link">Home</a>
+      <a href="tutorial.html" class="header-nav-link">Tutorial</a>
+      <a href="about.html" class="header-nav-link">About</a>
+    </div>
+  </div>
+  <button id="theme-toggle" style="display:none;"></button>
+</header>
+
+<!-- -- STATUS BAR -- -->
+<div id="status-bar">
+  <span id="sb-system" class="sb-item"><span class="st-dot green"></span>SYSTEM ACTIVE</span>
+  <span class="sb-sep">|</span>
+  <span id="sb-plasma" class="sb-item"><span class="st-dot orange"></span>PLASMA ON</span>
+  <span class="sb-sep">|</span>
+  <span id="sb-flux" class="sb-item"><span class="st-dot purple"></span>ION FLUX NOMINAL</span>
+  <span class="sb-sep">|</span>
+  <span class="sb-item sb-val">YIELD: <span id="sb-yield">--</span></span>
+  <span class="sb-item sb-val">RATE: <span id="sb-rate">--</span> atoms/s</span>
+  <span class="sb-item sb-val">MFP: <span id="sb-mfp">--</span> cm</span>
+</div>
+
+<!-- -- APP BODY -- -->
+<div id="app-body">
+
+  <!-- -- LEFT SIDEBAR -- -->
+  <aside class="sidebar-left layout-rail" id="left-panel" style="display:flex;flex-direction:column;">
+
+    <!-- ? GUN CONFIG -->
+    <div class="panel acc-open" id="gun-panel">
+      <div class="accordion-header sidebar-acc-header" style="padding:8px 12px;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <span class="sb-section-header" style="margin:0;">
+          <div class="pid-instrument-tag" style="font-size:7px;">GUN-CFG</div>
+          Gun Configuration
+        </span>
+<span class="acc-arrow">&gt;</span>
+      </div>
+      <div class="acc-content" style="overflow:visible;">
+        <!-- GUN 1 -->
+        <div class="gun-card" id="gun-card-1" style="--gun-color:#4a90d4;">
+          <div class="gun-header">
+            <div class="gun-tag" style="background:rgba(74,144,212,0.12);color:#4a90d4;border-color:rgba(74,144,212,0.4);">GUN 1</div>
+            <label class="gun-toggle"><input type="checkbox" id="src1Active" checked> ON</label>
+          </div>
+          <select id="src1MatSelect" class="gun-select">
+            <option value="Cu">Copper (Cu)</option><option value="Al">Aluminum (Al)</option>
+            <option value="Ti">Titanium (Ti)</option><option value="Ta">Tantalum (Ta)</option>
+            <option value="Zn">Zinc (Zn)</option><option value="Sn">Tin (Sn)</option>
+            <option value="W">Tungsten (W)</option><option value="Mo">Molybdenum (Mo)</option>
+          </select>
+          <div class="gun-power-row">
+            <select id="src1PowerType" class="gun-mode-select"><option value="DC" selected>DC</option><option value="RF">RF</option></select>
+            <input type="range" id="src1PowerSlider" min="50" max="600" value="300" step="10" class="gun-slider" style="accent-color:#4a90d4;">
+            <span id="src1PowerVal" class="gun-power-val" style="color:#4a90d4;">300W</span>
+          </div>
+          <div class="gun-yield-row">Y: <span id="src1YieldVal" style="color:#4a90d4;">--</span></div>
+        </div>
+        <!-- GUN 2 -->
+        <div class="gun-card" id="gun-card-2" style="--gun-color:#d4763a;">
+          <div class="gun-header">
+            <div class="gun-tag" style="background:rgba(212,118,58,0.12);color:#d4763a;border-color:rgba(212,118,58,0.4);">GUN 2</div>
+            <label class="gun-toggle"><input type="checkbox" id="src2Active"> ON</label>
+          </div>
+          <select id="src2MatSelect" class="gun-select">
+            <option value="Cu">Copper (Cu)</option><option value="Al" selected>Aluminum (Al)</option>
+            <option value="Ti">Titanium (Ti)</option><option value="Ta">Tantalum (Ta)</option>
+            <option value="Zn">Zinc (Zn)</option><option value="Sn">Tin (Sn)</option>
+            <option value="W">Tungsten (W)</option><option value="Mo">Molybdenum (Mo)</option>
+          </select>
+          <div class="gun-power-row">
+            <select id="src2PowerType" class="gun-mode-select"><option value="DC">DC</option><option value="RF" selected>RF</option></select>
+            <input type="range" id="src2PowerSlider" min="50" max="600" value="200" step="10" class="gun-slider" disabled style="accent-color:#d4763a;opacity:0.4;">
+            <span id="src2PowerVal" class="gun-power-val" style="color:#d4763a;">200W</span>
+          </div>
+          <div class="gun-yield-row">Y: <span id="src2YieldVal" style="color:#d4763a;">--</span></div>
+        </div>
+        <!-- GUN 3 -->
+        <div class="gun-card" id="gun-card-3" style="--gun-color:#9b72c8;">
+          <div class="gun-header">
+            <div class="gun-tag" style="background:rgba(155,114,200,0.12);color:#9b72c8;border-color:rgba(155,114,200,0.4);">GUN 3</div>
+            <label class="gun-toggle"><input type="checkbox" id="src3Active"> ON</label>
+          </div>
+          <select id="src3MatSelect" class="gun-select">
+            <option value="Cu">Copper (Cu)</option><option value="Al">Aluminum (Al)</option>
+            <option value="Ti">Titanium (Ti)</option><option value="Ta">Tantalum (Ta)</option>
+            <option value="Zn" selected>Zinc (Zn)</option><option value="Sn">Tin (Sn)</option>
+            <option value="W">Tungsten (W)</option><option value="Mo">Molybdenum (Mo)</option>
+          </select>
+          <div class="gun-power-row">
+            <select id="src3PowerType" class="gun-mode-select"><option value="DC">DC</option><option value="RF" selected>RF</option></select>
+            <input type="range" id="src3PowerSlider" min="50" max="600" value="200" step="10" class="gun-slider" disabled style="accent-color:#9b72c8;opacity:0.4;">
+            <span id="src3PowerVal" class="gun-power-val" style="color:#9b72c8;">200W</span>
+          </div>
+          <div class="gun-yield-row">Y: <span id="src3YieldVal" style="color:#9b72c8;">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ? GAS & PRESSURE -->
+    <div class="panel acc-open" id="gas-panel">
+      <div class="accordion-header sidebar-acc-header" style="padding:8px 12px;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <span class="sb-section-header" style="margin:0;">
+          <div class="pid-instrument-tag" style="font-size:7px;">FIC-201</div>
+          Gas &amp; Pressure
+        </span>
+<span class="acc-arrow">&gt;</span>
+      </div>
+      <div class="acc-content" style="overflow:visible;">
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Working Gas (Ar)</span><span id="argonVal" class="ctrl-val">100 %</span></div>
+          <input type="range" id="argonSlider" min="50" max="100" value="100" step="5" class="pid-slider">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Reactive Gas (O2 in Ar)</span><span id="gasCompVal" class="ctrl-val">0 %</span></div>
+          <input type="range" id="gasCompSlider" min="0" max="50" value="0" step="5" class="pid-slider">
+        </div>
+        <div class="ctrl-row" id="ctrl-pressure">
+          <div class="ctrl-label"><span>Pressure</span><span class="ctrl-val"><span id="pressureVal">15</span> mTorr</span></div>
+          <input type="range" id="pressureSlider" min="0.1" max="50" value="15" step="0.1" class="pid-slider">
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-label"><span>Temperature</span><span class="ctrl-val"><span id="tempVal">300</span> K</span></div>
+          <input type="range" id="tempSlider" min="200" max="500" value="300" step="10" class="pid-slider">
+        </div>
+      </div>
+    </div>
+
+    <!-- ? VISUALISATION -->
+    <div id="process-slot" class="rail-slot"></div>
+    <div id="geometry-slot" class="rail-slot"></div>
+
+    <div class="panel" id="vis-panel">
+      <div class="accordion-header sidebar-acc-header" style="padding:8px 12px;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <span class="sb-section-header" style="margin:0;">
+          <div class="pid-instrument-tag" style="font-size:7px;">VIS</div>
+          Visualisation
+        </span>
+<span class="acc-arrow">&gt;</span>
+      </div>
+      <div class="acc-content" style="padding:0;max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+        <label class="toggle-row"><span>Plasma Filaments</span><input type="checkbox" id="hqPlasmaCheck" checked></label>
+        <label class="toggle-row"><span>Magnetic Field Lines</span><input type="checkbox" id="drawMagLinesCheck" checked></label>
+        <label class="toggle-row"><span>Substrate Rotation</span><input type="checkbox" id="substrateRotCheck" checked></label>
+        <label class="toggle-row"><span>Low Clutter Mode</span><input type="checkbox" id="lowClutterCheck"></label>
+        <details class="vis-advanced">
+          <summary>Advanced Visual Aids</summary>
+          <label class="toggle-row"><span>Electron Spirals</span><input type="checkbox" id="drawElectronsCheck" checked></label>
+          <label class="toggle-row"><span>Guided Tutorial</span><input type="checkbox" id="guidedModeCheck"></label>
+          <label class="toggle-row challenge-toggle"><span>Challenge Mode</span><input type="checkbox" id="challengeModeCheck"></label>
+        </details>
+        <div id="challenge-panel" style="display:none;margin:6px 10px 8px;">
+          <div class="challenge-box">
+            <div class="challenge-title">Target Goal (60s)</div>
+            <p>Rate &gt; <span id="ch-goal-rate">50</span> atoms/s</p>
+            <p>Non-Unif &lt; <span id="ch-goal-uni">15</span>%</p>
+            <p id="challenge-feedback" style="color:#fff;font-weight:600;margin-top:4px;"></p>
+          </div>
+        </div>
+        <div class="opacity-sliders">
+          <div class="ctrl-row" style="padding:4px 10px;">
+            <div class="ctrl-label"><span>Field Lines</span><span id="opFieldVal" class="ctrl-val">100%</span></div>
+            <input type="range" id="opFieldSlider" min="0" max="100" value="100" step="5" class="pid-slider">
+          </div>
+          <div class="ctrl-row" style="padding:4px 10px;">
+            <div class="ctrl-label"><span>Electrons</span><span id="opElecVal" class="ctrl-val">100%</span></div>
+            <input type="range" id="opElecSlider" min="0" max="100" value="100" step="5" class="pid-slider">
+          </div>
+          <div class="ctrl-row" style="padding:4px 10px;">
+            <div class="ctrl-label"><span>Plasma Glow</span><span id="opGlowVal" class="ctrl-val">100%</span></div>
+            <input type="range" id="opGlowSlider" min="0" max="100" value="100" step="5" class="pid-slider">
+          </div>
+          <div class="ctrl-row" style="padding:4px 10px;">
+            <div class="ctrl-label"><span>Particles</span><span id="opPartVal" class="ctrl-val">100%</span></div>
+            <input type="range" id="opPartSlider" min="10" max="100" value="100" step="5" class="pid-slider">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ? LEGEND -->
+    <div class="panel" id="leg-panel">
+      <div class="accordion-header sidebar-acc-header" style="padding:8px 12px;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <span class="sb-section-header" style="margin:0;">
+          <div class="pid-instrument-tag" style="font-size:7px;">LEG</div>
+          Particle Legend
+        </span>
+<span class="acc-arrow">&gt;</span>
+      </div>
+      <div class="acc-content" style="padding:4px 0;max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+        <div class="legend-item"><div><span class="legend-dot" style="background:#ff8c42;"></span>Sputtered Atoms</div><span class="legend-tag">target mat.</span></div>
+        <div class="legend-item"><div><span class="legend-dot" style="background:#5080ff;"></span>Ar+ Ions</div><span class="legend-tag">plasma</span></div>
+        <div class="legend-item"><div><span class="legend-dot" style="background:#ff33cc;"></span>O2+ Ions</div><span class="legend-tag">reactive</span></div>
+        <div class="legend-item"><div><span class="legend-dot" style="background:#00ffcc;"></span>Electrons</div><span class="legend-tag">ExB drift</span></div>
+      </div>
+    </div>
+
+    <div id="left-preset-slot" class="rail-slot rail-slot-compact"></div>
+
+    <!-- Hidden JS stubs -->
+    <div style="display:none;">
+      <select id="viewModeSelect"><option value="3D" selected>3D Target View</option></select>
+      <select id="numSourcesSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+      <select id="materialSelect">
+        <option value="Cu">Copper (Cu)</option><option value="Al">Aluminum (Al)</option>
+        <option value="Ti">Titanium (Ti)</option><option value="Ta">Tantalum (Ta)</option>
+        <option value="Zn">Zinc (Zn)</option><option value="Sn">Tin (Sn)</option>
+        <option value="W">Tungsten (W)</option><option value="Mo">Molybdenum (Mo)</option>
+      </select>
+    </div>
+
+  </aside>
+
+  <!-- -- MAIN CANVAS -- -->
+  <main class="workspace-main">
+    <div id="canvas-wrapper" class="workspace-canvas" style="position:relative;width:calc(100% - 8px);height:calc(100% - 8px);margin:4px;border:1px solid rgba(255,255,255,0.1);">
+      <!-- P&ID corner labels -->
+      <div class="pid-frame-label pid-frame-tl">VACUUM CHAMBER | PVD-001</div>
+      <div class="pid-frame-label pid-frame-tr">P = <span id="pid-pressure-live">15</span> mTorr</div>
+
+      <div id="canvas-container" class="tooltip" data-tooltip="Vacuum chamber: Ions (blue) bombard target, sputtered atoms (orange) rise to substrate. Adjust controls to change physics.">
+      </div>
+
+      <div class="info-overlay">
+        <div class="label" id="lbl-substrate">Substrate (Anode)</div>
+        <div class="label" id="lbl-gas">Gas Transport Region</div>
+        <div class="label" id="lbl-plasma">Plasma Generation</div>
+        <div class="label" id="lbl-target">Target (Cathode)</div>
+      </div>
+    </div>
+    <div id="metrics-strip-slot" class="chamber-strip"></div>
+  </main>
+
+  <!-- -- RIGHT SIDEBAR -- -->
+  <aside class="sidebar-right layout-rail">
+
+    <!-- Quick indicators -->
+    <div class="sb-section">
+      <div class="sb-section-header">
+        <div class="pid-instrument-tag">QI-301</div>
+        Quick Indicators
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px;">
+        <div class="metric-card" style="border-top:2px solid var(--accent-plasma);">
+          <div class="m-title">AVG RATE</div>
+          <div id="stat-avg-rate" class="m-val" style="color:var(--accent-plasma);">0.0</div>
+          <div class="m-unit">atoms/s</div>
+        </div>
+        <div class="metric-card" style="border-top:2px solid var(--accent-cyan);">
+          <div class="m-title">MAX YIELD</div>
+          <div id="stat-max-yield" class="m-val" style="color:var(--accent-cyan);">0.00</div>
+          <div class="m-unit">atoms/ion</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-tab-row" id="chart-tab-row">
+      <button class="chart-tab-btn active" data-chart-tab="time">Time Series</button>
+      <button class="chart-tab-btn" data-chart-tab="profile">Thickness Profile</button>
+    </div>
+
+    <!-- Time series chart -->
+    <div class="panel graph" data-chart-panel="time">
+      <div class="chart-header">
+        <div class="sb-section-header" style="margin:0;">
+          <div class="pid-instrument-tag">TR-302</div>
+          Time Series
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <label style="font-size:9px;color:var(--text-dim);display:flex;align-items:center;gap:3px;cursor:pointer;">
+            <input type="checkbox" id="smoothTimeCheck" checked> Smooth
+          </label>
+          <button id="btn-chart-time" style="font-family:var(--font-mono);font-size:9px;padding:3px 9px;border-radius:var(--radius);cursor:pointer;border:1px solid var(--border-bright);background:rgba(74,144,212,0.18);color:var(--accent-cyan);">Time</button>
+          <button id="btn-chart-power" style="font-family:var(--font-mono);font-size:9px;padding:3px 9px;border-radius:var(--radius);cursor:pointer;border:1px solid var(--border-bright);background:var(--bg-section);color:var(--text-secondary);">Power</button>
+        </div>
+      </div>
+      <div class="graph-inner" style="position:relative;min-height:195px;">
+        <canvas id="depChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Radial thickness profile -->
+    <div class="panel graph" data-chart-panel="profile">
+      <div class="chart-header">
+        <div class="sb-section-header" style="margin:0;">
+          <div class="pid-instrument-tag">PR-303</div>
+          Radial Thickness Profile
+        </div>
+      </div>
+      <div class="graph-inner" style="position:relative;min-height:160px;">
+        <canvas id="profileChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Active physics -->
+    <div class="physics-readout" style="display:none;">
+      <div class="sb-section-header">
+        <div class="pid-instrument-tag">PHY</div>
+        Active Physics
+      </div>
+      <div class="physics-eq">Y = 0.042 x a x S_n(E) / U0</div>
+      <div class="physics-eq secondary">lambda ~ kT / (sqrt(2) x pi x d^2 x P)</div>
+      <div class="physics-meta">
+        <span>Yamamura-Bohdansky</span><span>|</span>
+        <span>Reduced-order ExB</span><span>|</span>
+        <span>Cosine dist.</span><span>|</span>
+        <span id="physics-model-tag">Reduced-order teaching model</span>
+      </div>
+    </div>
+
+    <div id="right-controls-slot" class="right-controls-slot"></div>
+
+  </aside>
+
+  <!-- -- BOTTOM BAR -- -->
+  <div class="bottom-bar" id="bottom-panel">
+
+    <!-- Col 1: Magnetic Confinement + Density + Speed -->
+    <div class="bp-col" id="ctrl-power">
+      <div class="bp-header" style="color:var(--accent-ion);">
+        <div class="bp-marker" style="background:var(--accent-ion);"></div>
+        <div class="pid-instrument-tag" style="font-size:7px;">BIC-201</div>
+        Magnetic Confinement
+      </div>
+      <div class="control-group" id="ctrl-mag">
+        <label for="magSlider">MAGNETIC FIELD (B) <span style="color:var(--accent-ion);"><span id="magVal">0.03</span> T</span></label>
+        <input type="range" id="magSlider" min="0" max="0.1" value="0.03" step="0.01">
+      </div>
+      <div class="control-group">
+        <label for="densitySlider">PARTICLE DENSITY <span id="densityVal" style="color:var(--accent-green);">100 %</span></label>
+        <input type="range" id="densitySlider" min="10" max="100" value="100" step="10">
+      </div>
+      <div class="control-group">
+        <label for="speedSlider">SIM SPEED <span id="speedVal" style="color:var(--accent-yellow);">1.0 X</span></label>
+        <input type="range" id="speedSlider" min="0.5" max="5.0" value="1.0" step="0.5">
+      </div>
+      <!-- Hidden JS stubs -->
+      <span id="ionEnergyVal" style="display:none;">580 eV</span>
+      <span id="powerVal" style="display:none;">300 W</span>
+      <input id="powerSlider" type="range" style="display:none;" min="50" max="500" value="300">
+    </div>
+
+    <!-- Col 2: Geometry & Setup -->
+    <div class="bp-col" id="ctrl-geometry">
+      <div class="bp-header" style="color:var(--accent-green);">
+        <div class="bp-marker" style="background:var(--accent-green);"></div>
+        <div class="pid-instrument-tag" style="font-size:7px;">GEO-301</div>
+        Geometry &amp; Setup
+      </div>
+      <div class="control-group">
+        <label for="distanceSlider">T-S DISTANCE <span style="color:var(--accent-green);"><span id="distanceVal">10</span> cm</span></label>
+        <input type="range" id="distanceSlider" min="5" max="25" value="10" step="1">
+      </div>
+      <div class="control-group">
+        <label for="targetDiaSlider">TARGET DIA <span style="color:var(--accent-cyan);"><span id="targetDiaVal">3</span> in</span></label>
+        <input type="range" id="targetDiaSlider" min="2" max="6" value="3" step="0.5">
+      </div>
+      <div class="control-group">
+        <label for="subDiaSlider">SUBSTRATE DIA <span style="color:var(--accent-cyan);"><span id="subDiaVal">4</span> in</span></label>
+        <input type="range" id="subDiaSlider" min="2" max="12" value="4" step="1">
+      </div>
+      <div class="control-group" style="margin-top:8px;">
+        <label style="letter-spacing:1.5px;font-size:8px;color:var(--text-secondary);">GROWTH MODE</label>
+        <select id="growthModeSelect" style="
+          width:100%; margin-top:4px;
+          background:var(--bg-panel); color:var(--text-primary);
+          border:1px solid var(--border-bright); border-radius:3px;
+          font-family:var(--font-mono); font-size:9px; letter-spacing:1px;
+          padding:4px 6px; cursor:pointer;">
+          <option value="auto">AUTO (T + mismatch)</option>
+            <option value="FM">Frank-van der Merwe (Layer)</option>
+            <option value="VW">Volmer-Weber (Island)</option>
+            <option value="SK">Stranski-Krastanov</option>
+        </select>
+      </div>
+      <div class="control-group" style="margin-top:6px;">
+        <label for="latticeMismatchSlider">LATTICE MISMATCH <span style="color:var(--accent-yellow);"><span id="latticeMismatchVal">4%</span></span></label>
+        <input type="range" id="latticeMismatchSlider" min="0" max="15" value="4" step="1">
+      </div>
+    </div>
+
+    <!-- Col 3: Process Metrics (Live Diagnostics + metrics combined) -->
+    <div class="bp-col" id="process-metrics-col">
+      <div class="bp-header" style="color:var(--accent-yellow);">
+        <div class="bp-marker" style="background:var(--accent-yellow);"></div>
+        <div class="pid-instrument-tag" style="font-size:7px;">PM-401</div>
+        Process Metrics
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:4px;">
+        <div class="metric-card" style="border-top:2px solid var(--accent-cyan);padding:3px 5px;">
+          <div class="m-title" style="font-size:7px;">YIELD (Y)</div>
+          <div id="stat-yield" class="m-val" style="color:var(--accent-cyan);font-size:11px;">0.00</div>
+          <div class="m-unit">atoms/ion</div>
+        </div>
+        <div class="metric-card" style="border-top:2px solid var(--accent-plasma);padding:3px 5px;">
+          <div class="m-title" style="font-size:7px;">DEPOSITED</div>
+          <div id="stat-deposited" class="m-val" style="color:var(--accent-plasma);font-size:11px;">0</div>
+          <div class="m-unit">atoms</div>
+        </div>
+        <div class="metric-card" style="border-top:2px solid var(--accent-ion);padding:3px 5px;">
+              <div class="m-title" style="font-size:7px;">CENTER THICKNESS</div>
+          <div id="stat-center" class="m-val" style="color:var(--accent-ion);font-size:11px;">0.00</div>
+          <div class="m-unit">nm</div>
+        </div>
+        <div class="metric-card" style="border-top:2px solid var(--accent-green);padding:3px 5px;">
+          <div class="m-title" style="font-size:7px;">UNIFORMITY</div>
+          <div id="stat-uniformity" class="m-val" style="color:var(--accent-green);font-size:11px;">--</div>
+          <div class="m-unit">%</div>
+        </div>
+        <div class="metric-card" style="border-top:2px solid var(--accent-cyan);padding:3px 5px;">
+          <div class="m-title" style="font-size:7px;">EDGE AVG</div>
+          <div id="stat-edge" class="m-val" style="color:var(--accent-cyan);font-size:11px;">0.00</div>
+          <div class="m-unit">nm</div>
+        </div>
+        <div class="metric-card" style="border-top:2px solid var(--accent-yellow);padding:3px 5px;">
+          <div class="m-title" style="font-size:7px;">EFFICIENCY</div>
+          <div id="stat-efficiency" class="m-val" style="color:var(--accent-yellow);font-size:11px;">0</div>
+          <div class="m-unit">atoms/W</div>
+        </div>
+      </div>
+      <div class="bp-meta">
+                <div class="bp-meta-row"><span>PHYSICS MODEL</span><span>Yamamura-Bohdansky</span></div>
+            <div class="bp-meta-row"><span>ION DYNAMICS</span><span>Reduced-order</span></div>
+        <div class="bp-meta-row"><span>GROWTH MODE</span><span id="stat-growth-mode">FM</span></div>
+      </div>
+    </div>
+
+    <!-- Col 4: Process Controls on dark background -->
+    <div class="bp-col process-controls-col" id="process-controls-col">
+      <div class="bp-header" style="color:var(--accent-green);">
+        <div class="bp-marker" style="background:var(--accent-green);"></div>
+        <div class="pid-instrument-tag" style="font-size:7px;">CTL-501</div>
+        Process Controls
+      </div>
+      <!-- Process Timer -->
+      <div id="process-timer" class="process-timer">
+        <div class="process-timer-label">Process Time</div>
+        <div class="process-timer-readout">
+          <span id="timer-display" class="process-timer-display">00:00</span>
+          <span id="timer-ms" class="process-timer-ms">.0</span>
+        </div>
+        <div id="timer-status" class="process-timer-status">IDLE</div>
+      </div>
+      <div class="sb-section" id="thickness-target-section">
+        <div class="sb-section-header">
+          <span class="pid-instrument-tag">TGT</span>
+          THICKNESS TARGET
+        </div>
+
+        <div class="ctrl-row" style="align-items:center; gap:8px; padding: 0 12px 6px;">
+          <label class="ctrl-label" for="targetThicknessInput"
+                 style="min-width:0; flex:1;">
+            Target (nm)
+          </label>
+          <input
+            type="number"
+            id="targetThicknessInput"
+            min="1" max="5000" step="1" value=""
+            placeholder="e.g. 100"
+            style="width:80px; background:var(--bg-input); border:1px solid
+                   var(--border); border-radius:var(--radius); color:var(--text-primary);
+                   font-family:var(--font-mono); font-size:11px; padding:4px 6px;
+                   text-align:right;"
+          >
+          <span style="font-family:var(--font-mono); font-size:10px;
+                       color:var(--text-dim);">nm</span>
+        </div>
+
+        <div class="ctrl-row" style="padding: 0 12px 6px; gap:6px;">
+          <button id="btn-set-thickness-target"
+                  class="ctrl-btn"
+                  style="flex:1; font-size:10px; padding:5px 0;">
+            Set Target
+          </button>
+          <button id="btn-clear-thickness-target"
+                  class="ctrl-btn"
+                  style="flex:1; font-size:10px; padding:5px 0;
+                         color:var(--text-dim);">
+            Clear
+          </button>
+        </div>
+
+        <div id="thickness-target-status"
+             style="display:none; margin:0 12px 8px; padding:7px 10px;
+                    background:var(--bg-section); border:1px solid var(--border);
+                    border-radius:var(--radius); font-family:var(--font-mono);
+                    font-size:10px; line-height:1.7;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-dim);">TARGET</span>
+            <span id="tt-target-val" style="color:var(--accent-cyan);">&mdash; nm</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-dim);">CURRENT</span>
+            <span id="tt-current-val" style="color:var(--accent-yellow);">0.00 nm</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-dim);">REMAINING</span>
+            <span id="tt-remaining-val" style="color:var(--text-secondary);">&mdash; nm</span>
+          </div>
+          <div style="margin-top:5px; height:4px; background:var(--border);
+                      border-radius:2px; overflow:hidden;">
+            <div id="tt-progress-bar"
+                 style="height:100%; width:0%; background:var(--accent-cyan);
+                        border-radius:2px; transition:width 0.5s ease;">
+            </div>
+          </div>
+        </div>
+
+        <div id="thickness-target-achieved"
+             style="display:none; margin:0 12px 8px; padding:8px 10px;
+                    background:rgba(90,170,114,0.12);
+                    border:1px solid var(--accent-green);
+                    border-radius:var(--radius); font-family:var(--font-mono);
+                    font-size:10px; color:var(--accent-green); line-height:1.7;">
+          <div style="font-weight:700; letter-spacing:1px; margin-bottom:3px;">
+            &#10003; TARGET REACHED
+          </div>
+          <div id="tt-achieved-summary" style="color:var(--text-secondary);"></div>
+        </div>
+      </div>
+      <div class="recipe-summary" id="recipe-summary">
+        <div class="recipe-summary-header">
+          <span>Active Recipe</span>
+          <span id="recipe-status-pill" class="recipe-status-pill">Idle</span>
+        </div>
+        <div class="recipe-summary-grid">
+          <div class="recipe-chip">
+            <span class="recipe-chip-label">Guns</span>
+            <span id="recipe-active-guns" class="recipe-chip-value">None active</span>
+          </div>
+          <div class="recipe-chip">
+            <span class="recipe-chip-label">Materials</span>
+              <span id="recipe-materials" class="recipe-chip-value">--</span>
+          </div>
+          <div class="recipe-chip">
+            <span class="recipe-chip-label">Modes</span>
+              <span id="recipe-modes" class="recipe-chip-value">--</span>
+          </div>
+          <div class="recipe-chip">
+            <span class="recipe-chip-label">Total Power</span>
+            <span id="recipe-total-power" class="recipe-chip-value">0 W</span>
+          </div>
+          <div class="recipe-chip">
+            <span class="recipe-chip-label">Pressure</span>
+            <span id="recipe-pressure" class="recipe-chip-value">15 mTorr</span>
+          </div>
+          <div class="recipe-chip">
+            <span class="recipe-chip-label">Film Mix</span>
+              <span id="recipe-composition" class="recipe-chip-value">--</span>
+          </div>
+        </div>
+      </div>
+      <div class="process-diagnostic-panel" id="process-diagnostic-panel">
+        <div class="process-diagnostic-header">
+          <span>Process Diagnostics</span>
+          <span id="diag-status-pill" class="process-diagnostic-pill status-green">Stable</span>
+        </div>
+        <div class="process-diagnostic-grid">
+          <div class="process-diagnostic-item" title="Assumed base pressure before Ar backfill. Real magnetron systems typically reach 10⁻⁶–10⁻⁷ Torr before deposition.">
+            <span class="process-diagnostic-label">Base Pressure</span>
+            <span id="diag-base-pressure" class="process-diagnostic-value">1.0 × 10⁻⁶ Torr</span>
+          </div>
+          <div class="process-diagnostic-item">
+            <span class="process-diagnostic-label">Working Pressure</span>
+            <span id="diag-working-pressure" class="process-diagnostic-value">--</span>
+          </div>
+          <div class="process-diagnostic-item">
+            <span class="process-diagnostic-label">Transport ratio</span>
+            <span id="diag-ratio" class="process-diagnostic-value">--</span>
+          </div>
+          <div class="process-diagnostic-item process-diagnostic-transport process-diagnostic-span2">
+            <span class="process-diagnostic-label">Transport regime</span>
+            <span id="diag-transport" class="process-diagnostic-value">--</span>
+            <span id="diag-transport-warning" class="process-diagnostic-warning"></span>
+          </div>
+          <div class="process-diagnostic-item">
+            <span class="process-diagnostic-label">Film uniformity</span>
+            <span id="diag-uniformity" class="process-diagnostic-value">--</span>
+          </div>
+          <div class="process-diagnostic-item">
+            <span class="process-diagnostic-label">Process status</span>
+            <span id="diag-process-status" class="process-diagnostic-value">Stable process</span>
+          </div>
+          <div class="process-diagnostic-item">
+            <span class="process-diagnostic-label">Center / edge ratio</span>
+            <span id="diag-center-edge" class="process-diagnostic-value">--</span>
+          </div>
+          <div class="process-diagnostic-item">
+            <span class="process-diagnostic-label">Edge landing fraction</span>
+            <span id="diag-edge-fraction" class="process-diagnostic-value">--</span>
+          </div>
+          <div class="process-diagnostic-item process-diagnostic-span2">
+            <span class="process-diagnostic-label">Landing histogram</span>
+            <span id="diag-histogram" class="process-diagnostic-value">--</span>
+          </div>
+        </div>
+      </div>
+      <div class="preset-box">
+        <div class="preset-box-header">Quick Presets</div>
+        <div class="preset-controls">
+          <select id="presetSelect" class="preset-select">
+            <option value="">Choose a preset</option>
+            <option value="high-rate">High Rate Metal</option>
+            <option value="uniform">Uniform Coating</option>
+            <option value="reactive">Reactive Sputtering</option>
+            <option value="co-sputter">Co-Sputter Blend</option>
+          </select>
+          <button id="btn-apply-preset" class="action-btn btn-dim">Apply</button>
+        </div>
+      </div>
+      <div class="advisor-box">
+        <div class="advisor-box-header">Intelligent Recipe Advisor</div>
+        <div class="advisor-controls">
+          <div class="advisor-row">
+            <label for="aiMaterial">Recipe material</label>
+            <select id="aiMaterial" class="advisor-select">
+              <option value="Cu">Copper (Cu)</option>
+              <option value="Al">Aluminum (Al)</option>
+              <option value="Ti">Titanium (Ti)</option>
+              <option value="Ta">Tantalum (Ta)</option>
+              <option value="Zn">Zinc (Zn)</option>
+              <option value="Sn">Tin (Sn)</option>
+              <option value="W">Tungsten (W)</option>
+              <option value="Mo">Molybdenum (Mo)</option>
+            </select>
+          </div>
+          <button id="btn-ai-check" class="action-btn btn-blue">Check Current Settings</button>
+          <div class="advisor-note">The advisor reviews the current recipe, labels it as ready, marginal, or not recommended, and suggests a better process window only when needed.</div>
+        </div>
+        <div id="aiAdvisorResult" class="advisor-result hidden">
+          <div id="aiAdvisorStatus" class="advisor-status">Recipe assessment ready</div>
+          <div class="advisor-grid">
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Recipe status</span>
+              <span id="aiRecStatus" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Pressure</span>
+              <span id="aiRecPressure" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Power / Mode</span>
+              <span id="aiRecPower" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Mag Field</span>
+              <span id="aiRecMag" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">T-S Distance</span>
+              <span id="aiRecDistance" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Target / Substrate</span>
+              <span id="aiRecGeometry" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Predicted Regime</span>
+              <span id="aiRecRegime" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Predicted Uniformity</span>
+              <span id="aiRecUniformity" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Predicted Rate Trend</span>
+              <span id="aiRecRate" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Recommended Growth Mode</span>
+              <span id="aiRecGrowthMode" class="advisor-metric-value">--</span>
+            </div>
+            <div class="advisor-metric">
+              <span class="advisor-metric-label">Key issue</span>
+              <span id="aiRecIssue" class="advisor-metric-value">--</span>
+            </div>
+          </div>
+          <div id="aiAdvisorExplanation" class="advisor-explanation"></div>
+          <div class="advisor-actions">
+            <button id="btn-ai-start" class="action-btn btn-green">Start Process</button>
+            <button id="btn-ai-apply" class="action-btn btn-dim">Apply Suggested Fix</button>
+          </div>
+        </div>
+      </div>
+        <button id="btn-start" class="action-btn btn-green" style="font-size:10px;letter-spacing:1.5px;">Start Process</button>
+      <div id="start-warning" class="start-warning"></div>
+        <button id="btn-intro" class="action-btn btn-blue">Intro Tour</button>
+      <div class="action-row">
+        <button id="btn-reset" class="action-btn btn-red">Reset Film</button>
+        <button id="btn-reset-target" class="action-btn btn-red" style="opacity:0.85;">Reset Target</button>
+      </div>
+      <div class="action-row">
+        <button id="btn-export" class="action-btn btn-green">Export CSV</button>
+        <button id="btn-export-fig3" class="action-btn btn-dim">Export Figure 3 Data</button>
+      </div>
+      <button id="btn-reset-defaults" class="action-btn btn-dim">Reset Defaults</button>
+      <div class="limitations-note" id="sim-limitations-note">
+        <div class="limitations-title">Model Limitations</div>
+        <p>This simulator is a reduced-order teaching model. It shows trends and tradeoffs well, but it is not calibrated for exact industrial deposition recipes.</p>
+      </div>
+    </div>
+
+  </div><!-- end bottom-bar -->
+
+</div><!-- end app-body -->
+
+<!-- Tutorial overlay -->
+<div id="tutorial-overlay" class="hidden">
+  <div class="tutorial-box">
+    <h3 id="tut-title">Tutorial Step</h3>
+    <p id="tut-text">Explanation text here.</p>
+          <button id="btn-tut-next">Next Step</button>
+  </div>
+</div>
+
+<script>
+/* -- Accordion toggle -- */
+document.querySelectorAll('.sidebar-acc-header').forEach(function(header){
+  header.addEventListener('click', function(){
+    var panel = header.parentElement;
+    var content = panel.querySelector('.acc-content');
+    if(!content) return;
+    panel.classList.toggle('acc-open');
+    if(panel.classList.contains('acc-open')){
+      content.style.maxHeight = (content.scrollHeight + 800) + 'px';
+    } else {
+      content.style.maxHeight = '0';
+    }
+  });
+});
+
+function moveNodeInto(targetId, node){
+  var target = document.getElementById(targetId);
+  if(target && node){ target.appendChild(node); }
+}
+
+function setupChartTabs(){
+  var buttons = document.querySelectorAll('.chart-tab-btn');
+  var panels = document.querySelectorAll('[data-chart-panel]');
+  if(!buttons.length || !panels.length) return;
+  panels.forEach(function(panel){
+    panel.classList.toggle('chart-panel-hidden', panel.getAttribute('data-chart-panel') !== 'time');
+  });
+  buttons.forEach(function(button){
+    button.addEventListener('click', function(){
+      var tab = button.getAttribute('data-chart-tab');
+      buttons.forEach(function(btn){ btn.classList.toggle('active', btn === button); });
+      panels.forEach(function(panel){
+        panel.classList.toggle('chart-panel-hidden', panel.getAttribute('data-chart-panel') !== tab);
+      });
+    });
+  });
+}
+
+function relocateLayoutBlocks(){
+  moveNodeInto('process-slot', document.getElementById('ctrl-power'));
+  moveNodeInto('geometry-slot', document.getElementById('ctrl-geometry'));
+  moveNodeInto('metrics-strip-slot', document.getElementById('process-metrics-col'));
+  moveNodeInto('right-controls-slot', document.getElementById('process-controls-col'));
+  moveNodeInto('left-preset-slot', document.querySelector('#process-controls-col .preset-box'));
+}
+
+/* Auto-open Gun Config and Gas panels on load */
+window.addEventListener('DOMContentLoaded', function(){
+  ['gun-panel','gas-panel','process-slot','geometry-slot'].forEach(function(id){
+    var panel = document.getElementById(id);
+    if(!panel) return;
+    var content = panel.querySelector ? panel.querySelector('.acc-content') : null;
+    if(panel.classList) panel.classList.add('acc-open');
+    if(content) content.style.maxHeight = (content.scrollHeight + 800) + 'px';
+  });
+  relocateLayoutBlocks();
+  setupChartTabs();
+  setViewMode('3d');
+});
+
+/* -- Mirror stats to status bar + P&ID live labels -- */
+function mirrorStats(){
+  var y = document.getElementById('stat-yield');
+  if(y){ var sb=document.getElementById('sb-yield'); if(sb) sb.textContent=y.textContent; }
+  var pv = document.getElementById('pressureVal');
+  var pl = document.getElementById('pid-pressure-live');
+  if(pv && pl) pl.textContent = pv.textContent;
+}
+setInterval(mirrorStats, 400);
+
+/* -- View mode toggle -- */
+function setViewMode(mode){
+  var b1=document.getElementById('btn-view-1d');
+  var b3=document.getElementById('btn-view-3d');
+  if(b1 && b3){
+    if(mode==='cross'){ b1.classList.add('active'); b3.classList.remove('active'); }
+    else              { b3.classList.add('active'); b1.classList.remove('active'); }
+  } else if (b3) {
+    b3.classList.add('active');
+  }
+  var sel=document.getElementById('viewModeSelect');
+  if(sel){ sel.value='3D'; sel.dispatchEvent(new Event('change',{bubbles:true})); }
+  if(typeof STATE!=='undefined') STATE.viewMode3D=true;
+}
+
+/* -- Theme toggle -- */
+document.getElementById('theme-toggle').addEventListener('click', function(){
+  document.body.classList.toggle('light-mode');
+});
+
+/* -- Collapsible left panel (legacy support) -- */
+function toggleLP(id){
+  var el=document.getElementById(id);
+  if(el) el.style.display=(el.style.display==='none')?'block':'none';
+}
+</script>
+
+<script src="tutorial_logic.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
+
+
+
+
+

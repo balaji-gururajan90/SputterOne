@@ -1,0 +1,2661 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Sputtering Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS_HTML"></script>
+    
+
+</head>
+<style>
+    html {
+        color-scheme: dark;
+    }
+
+    *,
+    *::before,
+    *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        height: 100%;
+    }
+
+    :root {
+        --black: #FAFAFA;
+        --deep: #FFFFFF;
+        --bg: #FAFAFA;
+        --panel: #FFFFFF;
+        --panel-2: #F0F4F8;
+        --border: rgba(0, 0, 0, 0.06);
+        --bhi: rgba(0, 0, 0, 0.05);
+
+        --cyan: #0B7DC1;
+        --gold: #0B7DC1;
+        --gold-l: #3A9FD4;
+        --gold-lt: #3A9FD4;
+        --gold-d: #085A8F;
+        --gold-dk: #085A8F;
+        --amber: #B7860B;
+
+        --text: #1A2332;
+        --muted: #4A5568;
+        --dim: #718096;
+        --white: #1A2332;
+        --grey1: #1A2332;
+        --grey2: #4A5568;
+        --grey3: #718096;
+        --g1: #1A2332;
+        --g2: #4A5568;
+        --g3: #718096;
+        --text-primary: #1A2332;
+        --text-dim: #718096;
+
+        --sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        --cond: 'Arial Narrow', 'Bahnschrift SemiCondensed', 'Segoe UI', sans-serif;
+        --mono: 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
+    }
+
+    body {
+        background: var(--black);
+        color: #1A2332;
+        font-size: 15px;
+        line-height: 1.75;
+        font-family: var(--sans);
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    /* -- CANVAS BACKGROUND -- */
+    #cvs {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    /* -- VIGNETTE -- */
+    #vignette {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+            radial-gradient(ellipse 70% 60% at 50% 50%,
+                transparent 30%, rgba(250, 250, 250, 0.18) 100%),
+            linear-gradient(180deg,
+                rgba(250, 250, 250, 0.10) 0%,
+                transparent 12%,
+                transparent 88%,
+                rgba(250, 250, 250, 0.16) 100%);
+    }
+
+    /* -- PAGE -- */
+    #page {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* ----------------------------
+   NAV BAR
+---------------------------- */
+    #nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 52px;
+        height: 52px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(13, 17, 23, 0.97);
+        backdrop-filter: blur(16px);
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .nav-logo {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #E0E0E0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nav-logo-sep {
+        width: 1px;
+        height: 16px;
+        background: var(--border);
+    }
+
+    .nav-tag {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #E0E0E0;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+    }
+
+    .nav-link {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #E0E0E0;
+        text-decoration: none;
+        transition: color 0.2s;
+        cursor: pointer;
+    }
+
+    .nav-link:hover {
+        color: #4DB7FF;
+    }
+
+    .nav-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 1.5px;
+        color: #E0E0E0;
+        padding-left: 20px;
+        border-left: 1px solid var(--border);
+    }
+
+    .status-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #5a9e60;
+        animation: sdot 2.5s ease-in-out infinite;
+    }
+
+    @keyframes sdot {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.25;
+        }
+    }
+
+    /* ----------------------------
+   HERO SECTION
+---------------------------- */
+    #hero {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        min-height: calc(100vh - 52px - 48px);
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* LEFT COLUMN */
+    .hero-left {
+        padding: 72px 64px 72px 52px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-right: 1px solid var(--border);
+    }
+
+    .hl-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 36px;
+        opacity: 0;
+        animation: fadeUp 0.8s 0.05s ease forwards;
+    }
+
+    .hl-label-line {
+        width: 32px;
+        height: 1px;
+        background: var(--gold-dk);
+    }
+
+    .hl-label-text {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 3.5px;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 400;
+    }
+
+    .hero-title {
+        font-family: var(--cond);
+        font-size: clamp(44px, 5.5vw, 72px);
+        font-weight: 700;
+        line-height: 0.96;
+        letter-spacing: -1.5px;
+        text-transform: uppercase;
+        color: var(--white);
+        margin-bottom: 32px;
+        opacity: 0;
+        animation: fadeUp 0.8s 0.12s ease forwards;
+    }
+
+    .hero-title .line-gold {
+        color: var(--gold);
+        display: block;
+    }
+
+    .hero-title .line-thin {
+        font-weight: 300;
+        color: var(--grey1);
+        font-size: 0.62em;
+        letter-spacing: 0px;
+        text-transform: none;
+        display: block;
+        font-family: var(--sans);
+        margin-top: 6px;
+    }
+
+    .hero-desc {
+        font-family: var(--sans);
+        font-size: 14.5px;
+        font-weight: 400;
+        line-height: 1.9;
+        color: var(--grey1);
+        max-width: 500px;
+        margin-bottom: 36px;
+        opacity: 0;
+        animation: fadeUp 0.8s 0.2s ease forwards;
+    }
+
+    .hero-desc strong {
+        color: var(--white);
+        font-weight: 500;
+    }
+
+    /* Formula box */
+    .formula-box {
+        border: 1px solid rgba(11, 125, 193, 0.20);
+        border-left: 4px solid #0B7DC1;
+        background: #F0F4F8;
+        color: #1A2332;
+        padding: 14px 20px;
+        border-radius: 2px;
+        margin-bottom: 40px;
+        opacity: 0;
+        animation: fadeUp 0.8s 0.28s ease forwards;
+    }
+
+    .formula-tag {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--grey2);
+        margin-bottom: 8px;
+    }
+
+    .formula-eq {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 300;
+        background: #F0F4F8;
+        border: 1px solid rgba(11, 125, 193, 0.20);
+        padding: 10px 12px;
+        color: #0B7DC1;
+        line-height: 2;
+        letter-spacing: 0.3px;
+    }
+
+    /* CTA */
+    .hero-cta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 48px;
+        opacity: 0;
+        animation: fadeUp 0.8s 0.35s ease forwards;
+    }
+
+    .btn-launch {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 14px 32px;
+        background: var(--gold);
+        color: #000;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-launch:hover {
+        background: var(--gold-lt);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 28px rgba(77, 183, 255, 0.18);
+    }
+
+    .btn-launch svg {
+        transition: transform 0.2s;
+    }
+
+    .btn-launch:hover svg {
+        transform: translateX(3px);
+    }
+
+    .btn-outline {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 13px 28px;
+        background: transparent;
+        color: var(--grey1);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline:hover {
+        border-color: rgba(255, 255, 255, 0.28);
+        color: var(--white);
+        transform: translateY(-1px);
+    }
+
+    /* Author */
+    .hero-author {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-top: 28px;
+        border-top: 1px solid var(--border);
+        opacity: 0;
+        animation: fadeUp 0.8s 0.42s ease forwards;
+    }
+
+    .author-init {
+        width: 38px;
+        height: 38px;
+        border-radius: 2px;
+        border: 1px solid var(--gold-dk);
+        background: rgba(77, 183, 255, 0.09);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--cond);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .author-name {
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--white);
+        letter-spacing: 0.2px;
+    }
+
+    .author-inst {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--grey2);
+        margin-top: 3px;
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(16px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* RIGHT COLUMN - live chamber */
+    .hero-right {
+        display: flex;
+        flex-direction: column;
+        background: var(--deep);
+        opacity: 0;
+        animation: fadeUp 1s 0.3s ease forwards;
+    }
+
+    .hr-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+
+    .hr-title {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--grey2);
+    }
+
+    .hr-live {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 1.5px;
+        color: #5a9e60;
+        text-transform: uppercase;
+    }
+
+    .hr-live-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #5a9e60;
+        animation: sdot 2s infinite;
+    }
+
+    .chamber-svg-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    /* chamber SVG animations */
+    @keyframes ionFall {
+        0% {
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+
+        12% {
+            opacity: 0.75;
+        }
+
+        88% {
+            opacity: 0.75;
+        }
+
+        100% {
+            transform: translateY(56px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes atomUp {
+        0% {
+            transform: translate(0, 0);
+            opacity: 0;
+        }
+
+        8% {
+            opacity: 0.85;
+        }
+
+        92% {
+            opacity: 0.85;
+        }
+
+        100% {
+            transform: translate(var(--ax, 0px), -90px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes plasmaP {
+
+        0%,
+        100% {
+            opacity: 0.3;
+        }
+
+        50% {
+            opacity: 0.55;
+        }
+    }
+
+    @keyframes raceP {
+
+        0%,
+        100% {
+            stroke-opacity: 0.35;
+            stroke-width: 1.8;
+        }
+
+        50% {
+            stroke-opacity: 0.85;
+            stroke-width: 2.5;
+        }
+    }
+
+    @keyframes filmF {
+
+        0%,
+        100% {
+            fill-opacity: 0.4;
+        }
+
+        50% {
+            fill-opacity: 0.75;
+        }
+    }
+
+    .ci1 {
+        animation: ionFall 1.5s 0.00s ease-in infinite;
+    }
+
+    .ci2 {
+        animation: ionFall 1.5s 0.38s ease-in infinite;
+    }
+
+    .ci3 {
+        animation: ionFall 1.5s 0.75s ease-in infinite;
+    }
+
+    .ci4 {
+        animation: ionFall 1.5s 1.12s ease-in infinite;
+    }
+
+    .ca1 {
+        animation: atomUp 1.7s 0.1s ease-out infinite;
+        --ax: -32px;
+    }
+
+    .ca2 {
+        animation: atomUp 1.7s 0.55s ease-out infinite;
+        --ax: 6px;
+    }
+
+    .ca3 {
+        animation: atomUp 1.7s 1.0s ease-out infinite;
+        --ax: 30px;
+    }
+
+    .ca4 {
+        animation: atomUp 1.9s 1.4s ease-out infinite;
+        --ax: -14px;
+    }
+
+    .cpl {
+        animation: plasmaP 2.2s ease-in-out infinite;
+    }
+
+    .crc {
+        animation: raceP 1.9s ease-in-out infinite;
+    }
+
+    .cfl {
+        animation: filmF 2.8s ease-in-out infinite;
+    }
+
+    .hr-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        border-top: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .hm-cell {
+        padding: 12px 16px;
+        border-right: 1px solid var(--border);
+        text-align: center;
+    }
+
+    .hm-cell:last-child {
+        border-right: none;
+    }
+
+    .hm-cell:hover {
+        background: rgba(77, 183, 255, 0.05);
+    }
+
+    .hm-label {
+        font-family: var(--mono);
+        font-size: 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--grey2);
+        margin-bottom: 4px;
+    }
+
+    .hm-val {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--gold-lt);
+    }
+
+    .hm-val.w {
+        color: var(--grey1);
+    }
+
+    /* ----------------------------
+   METRICS STRIP
+---------------------------- */
+    #metrics {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.015);
+        opacity: 0;
+        animation: fadeUp 0.8s 0.5s ease forwards;
+    }
+
+    .mc {
+        padding: 20px 0;
+        text-align: center;
+        border-right: 1px solid var(--border);
+        transition: background 0.2s;
+        cursor: default;
+    }
+
+    .mc:last-child {
+        border-right: none;
+    }
+
+    .mc:hover {
+        background: rgba(77, 183, 255, 0.05);
+    }
+
+    .mc-v {
+        font-family: var(--cond);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--white);
+        letter-spacing: 0.5px;
+        display: block;
+    }
+
+    .mc-v.g {
+        color: var(--gold);
+    }
+
+    .mc-u {
+        font-family: var(--mono);
+        font-size: 7.5px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--grey1);
+        display: block;
+        margin-top: 5px;
+    }
+
+    /* ----------------------------
+   PROCESS SECTION
+---------------------------- */
+    #process {
+        padding: 72px 52px;
+        border-bottom: 1px solid var(--border);
+        opacity: 0;
+        animation: fadeUp 0.8s 0.55s ease forwards;
+    }
+
+    .ps-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .ps-title {
+        font-family: var(--cond);
+        font-size: 28px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: -0.5px;
+        color: var(--white);
+    }
+
+    .ps-title span {
+        color: var(--gold);
+    }
+
+    .ps-sub {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--grey2);
+    }
+
+    .ps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .pc {
+        background: var(--deep);
+        padding: 32px 28px 28px;
+        transition: background 0.25s;
+        position: relative;
+    }
+
+    .pc:hover {
+        background: #FFFFFF;
+    }
+
+    .pc::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg,
+                var(--gold-dk) 0%,
+                transparent 70%);
+        opacity: 0.6;
+    }
+
+    .pc-num {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--grey1);
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pc-num span {
+        font-size: 22px;
+        font-family: var(--cond);
+        font-weight: 700;
+        color: rgba(77, 183, 255, 0.40);
+        letter-spacing: -1px;
+        line-height: 1;
+    }
+
+    .pc-diagram {
+        width: 100%;
+        height: 120px;
+        background: #F0F4F8;
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        margin-bottom: 22px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pc-title {
+        font-family: var(--cond);
+        font-size: 18px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: var(--white);
+        margin-bottom: 10px;
+    }
+
+    .pc-text {
+        font-family: var(--sans);
+        font-size: 12.5px;
+        font-weight: 400;
+        line-height: 1.8;
+        color: var(--grey1);
+    }
+
+    .pc-eq {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 300;
+        background: #F0F4F8;
+        border: 1px solid rgba(11, 125, 193, 0.20);
+        padding: 10px 12px;
+        color: #0B7DC1;
+        letter-spacing: 0.5px;
+        margin-top: 14px;
+        display: block;
+    }
+
+    /* Small diagram animations */
+    @keyframes di1 {
+        0% {
+            transform: translateY(-8px);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: 0.7;
+        }
+
+        85% {
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: translateY(36px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes da1 {
+        0% {
+            transform: translate(0, 0);
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 0.8;
+        }
+
+        90% {
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: translate(var(--ax, -20px), var(--ay, -36px));
+            opacity: 0;
+        }
+    }
+
+    @keyframes dl1 {
+        0% {
+            transform: translateY(-22px);
+            opacity: 0;
+        }
+
+        15% {
+            opacity: 0.7;
+        }
+
+        85% {
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: translateY(4px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes dpl {
+
+        0%,
+        100% {
+            opacity: 0.25;
+        }
+
+        50% {
+            opacity: 0.55;
+        }
+    }
+
+    @keyframes dob {
+        from {
+            transform: rotate(0deg) translateX(var(--r, 14px)) rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg) translateX(var(--r, 14px)) rotate(-360deg);
+        }
+    }
+
+    .dI1 {
+        animation: di1 1.2s 0.0s ease-in infinite;
+    }
+
+    .dI2 {
+        animation: di1 1.2s 0.4s ease-in infinite;
+    }
+
+    .dI3 {
+        animation: di1 1.2s 0.8s ease-in infinite;
+    }
+
+    .dA1 {
+        animation: da1 1.5s 0.0s ease-out infinite;
+        --ax: -20px;
+        --ay: -34px;
+    }
+
+    .dA2 {
+        animation: da1 1.5s 0.5s ease-out infinite;
+        --ax: 3px;
+        --ay: -40px;
+    }
+
+    .dA3 {
+        animation: da1 1.5s 1.0s ease-out infinite;
+        --ax: 20px;
+        --ay: -32px;
+    }
+
+    .dL1 {
+        animation: dl1 1.8s 0.0s ease-in infinite;
+    }
+
+    .dL2 {
+        animation: dl1 1.8s 0.6s ease-in infinite;
+    }
+
+    .dL3 {
+        animation: dl1 1.8s 1.2s ease-in infinite;
+    }
+
+    .dPL {
+        animation: dpl 2s ease-in-out infinite;
+    }
+
+    .dOB1 {
+        animation: dob 2.3s linear infinite;
+        transform-origin: center;
+        --r: 14px;
+    }
+
+    .dOB2 {
+        animation: dob 1.7s linear infinite;
+        transform-origin: center;
+        --r: 9px;
+    }
+
+    /* ----------------------------
+   FOOTER
+---------------------------- */
+    #footer {
+        padding: 20px 52px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        background: rgba(5, 5, 6, 0.6);
+    }
+
+    .ft-l {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 1.5px;
+        color: var(--grey1);
+    }
+
+    .ft-r {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 1.5px;
+        color: var(--grey1);
+        display: flex;
+        align-items: center;
+        gap: 0;
+    }
+
+    .ft-sep {
+        margin: 0 10px;
+        color: var(--grey3);
+    }
+
+    .ft-hi {
+        color: var(--gold-lt);
+    }
+
+    /* -- NEW POLISH CSS -- */
+    .gold-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold-dk), transparent);
+        margin: 40px auto;
+        width: 80%;
+        opacity: 0.5;
+    }
+
+    .heading-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        background: rgba(77, 183, 255, 0.10);
+        color: var(--gold-lt);
+        margin-right: 12px;
+        vertical-align: middle;
+    }
+
+    .screenshot-wrap {
+        margin: 25px 0;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--deep);
+    }
+
+    .screenshot-wrap img {
+        display: block;
+        width: 100%;
+        height: auto;
+        opacity: 0.9;
+    }
+
+    .screenshot-caption {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--grey2);
+        text-align: center;
+        padding: 8px;
+        background: #FFFFFF;
+        border-top: 1px solid var(--border);
+    }
+
+    .figure-modern {
+        margin: 25px 0;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #FFFFFF;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .figure-canvas {
+        position: relative;
+        min-height: 300px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 50% 12%, rgba(11, 125, 193, 0.10), transparent 24%),
+            radial-gradient(circle at 50% 80%, rgba(183, 134, 11, 0.08), transparent 22%),
+            linear-gradient(180deg, #F0F4F8, #F0F4F8);
+    }
+
+    .figure-canvas.plasma-figure {
+        min-height: 350px;
+    }
+
+    .figure-wall {
+        position: absolute;
+        top: 24px;
+        bottom: 30px;
+        width: 8px;
+        background: linear-gradient(180deg, rgba(156, 166, 184, 0.34), rgba(82, 90, 108, 0.24));
+    }
+
+    .figure-wall.left {
+        left: 18px;
+    }
+
+    .figure-wall.right {
+        right: 18px;
+    }
+
+    .figure-substrate {
+        position: absolute;
+        left: 50%;
+        top: 26px;
+        transform: translateX(-50%);
+        width: 58%;
+        height: 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 195, 255, 0.9);
+        background: linear-gradient(180deg, rgba(0, 168, 255, 0.30), rgba(0, 102, 160, 0.42));
+        box-shadow: 0 0 18px rgba(0, 184, 255, 0.28);
+    }
+
+    .figure-film {
+        position: absolute;
+        left: 50%;
+        top: 10px;
+        transform: translateX(-50%);
+        width: 34%;
+        height: 16px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(240, 191, 102, 0.98), rgba(134, 84, 31, 0.72));
+        box-shadow: 0 4px 14px rgba(77, 183, 255, 0.18);
+    }
+
+    .figure-column {
+        position: absolute;
+        left: 50%;
+        top: 42px;
+        transform: translateX(-50%);
+        width: 40%;
+        height: 185px;
+        background: linear-gradient(180deg, rgba(22, 132, 186, 0.22), rgba(84, 52, 200, 0.10));
+        border-left: 1px solid rgba(54, 161, 214, 0.18);
+        border-right: 1px solid rgba(54, 161, 214, 0.18);
+    }
+
+    .figure-particle {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(255, 171, 75, 0.85);
+        box-shadow: 0 0 8px rgba(255, 171, 75, 0.28);
+    }
+
+    .figure-trace {
+        position: absolute;
+        width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(88, 171, 255, 0.88), rgba(88, 171, 255, 0));
+        opacity: 0.9;
+    }
+
+    .figure-target-glow {
+        position: absolute;
+        left: 50%;
+        bottom: 68px;
+        transform: translateX(-50%);
+        width: 84px;
+        height: 36px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 50%, rgba(225, 143, 62, 0.42), rgba(121, 53, 24, 0.14) 70%, transparent 75%);
+        box-shadow: 0 0 26px rgba(129, 56, 255, 0.18);
+    }
+
+    .figure-target-disc {
+        position: absolute;
+        left: 50%;
+        bottom: 94px;
+        transform: translateX(-50%);
+        width: 64px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid rgba(211, 118, 42, 0.85);
+        background: linear-gradient(180deg, rgba(151, 90, 34, 0.92), rgba(90, 49, 25, 0.86));
+    }
+
+    .figure-target-base {
+        position: absolute;
+        bottom: 28px;
+        width: 92px;
+        height: 42px;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
+        opacity: 0.8;
+    }
+
+    .figure-target-base.left {
+        left: 90px;
+        background: linear-gradient(180deg, rgba(121, 128, 148, 0.42), rgba(64, 67, 78, 0.58));
+    }
+
+    .figure-target-base.right {
+        right: 90px;
+        background: linear-gradient(180deg, rgba(123, 142, 120, 0.34), rgba(54, 60, 54, 0.62));
+    }
+
+    .figure-label {
+        position: absolute;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+        color: #4A5568;
+        white-space: nowrap;
+    }
+
+    .figure-label.target {
+        left: 88px;
+        bottom: 10px;
+    }
+
+    .figure-label.transport {
+        left: 50%;
+        top: 118px;
+        transform: translateX(-50%);
+    }
+
+    .figure-label.film {
+        right: 74px;
+        top: 52px;
+    }
+
+    .profile-figure {
+        min-height: 250px;
+        padding: 18px 18px 14px;
+    }
+
+    .profile-grid {
+        position: absolute;
+        inset: 18px 18px 18px 18px;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 44px 34px;
+        opacity: 0.5;
+    }
+
+    .profile-axis {
+        position: absolute;
+        background: rgba(154, 162, 177, 0.35);
+    }
+
+    .profile-axis.x {
+        left: 52px;
+        right: 26px;
+        bottom: 46px;
+        height: 1px;
+    }
+
+    .profile-axis.y {
+        left: 52px;
+        top: 22px;
+        bottom: 46px;
+        width: 1px;
+    }
+
+    .profile-svg {
+        position: absolute;
+        inset: 0;
+    }
+
+    .profile-label {
+        position: absolute;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 1.1px;
+        color: rgba(203, 211, 223, 0.72);
+    }
+
+    .profile-label.y {
+        left: 14px;
+        top: 104px;
+        transform: rotate(-90deg);
+        transform-origin: left top;
+    }
+
+    .profile-label.x {
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
+    }
+
+    .profile-tick {
+        position: absolute;
+        font-family: var(--mono);
+        font-size: 9px;
+        color: rgba(176, 186, 200, 0.62);
+    }
+
+    .profile-tick.y-top {
+        left: 18px;
+        top: 24px;
+    }
+
+    .profile-tick.y-mid {
+        left: 28px;
+        top: 106px;
+    }
+
+    .profile-tick.y-low {
+        left: 36px;
+        bottom: 54px;
+    }
+
+    .profile-tick.x-left {
+        left: 52px;
+        bottom: 28px;
+    }
+
+    .profile-tick.x-mid {
+        left: 50%;
+        bottom: 28px;
+        transform: translateX(-50%);
+    }
+
+    .profile-tick.x-right {
+        right: 28px;
+        bottom: 28px;
+    }
+
+    .btn-glow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px 32px;
+        background: rgba(77, 183, 255, 0.14);
+        border: 1px solid var(--gold);
+        color: var(--gold-lt);
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 15px rgba(77, 183, 255, 0.10);
+    }
+
+    .btn-glow:hover {
+        background: rgba(77, 183, 255, 0.18);
+        box-shadow: 0 0 25px rgba(77, 183, 255, 0.22);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .cta-subtext {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--grey2);
+        margin-top: 12px;
+        letter-spacing: 1px;
+    }
+
+    /* Compact about-page pass */
+    :root {
+        --page-pad: 28px;
+        --body-size: 15px;
+        --label-size: 10px;
+        --section-max: 1160px;
+    }
+
+    body {
+        font-size: var(--body-size);
+    }
+
+    #hero.compact-hero {
+        min-height: auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr) !important;
+        align-items: stretch;
+        padding: 18px var(--page-pad) 10px;
+        margin-bottom: 0 !important;
+    }
+
+    #hero.compact-hero .hero-left {
+        padding: 24px var(--page-pad) 20px !important;
+        max-width: none !important;
+        text-align: center !important;
+        margin: 0 auto !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #hero.compact-hero .hl-label {
+        margin-bottom: 18px;
+    }
+
+    #hero.compact-hero .hero-title {
+        margin-bottom: 16px;
+    }
+
+    #hero.compact-hero .hero-desc {
+        max-width: 760px;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 15px;
+        line-height: 1.85;
+    }
+
+    .about-visual {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #FFFFFF;
+        min-height: 420px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .about-visual-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--grey2);
+    }
+
+    .about-visual-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 18px;
+    }
+
+    .about-visual-note {
+        padding: 12px 16px 14px;
+        border-top: 1px solid var(--border);
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--grey1);
+        background: #FFFFFF;
+    }
+
+    .about-overview-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 16px;
+        width: 100%;
+    }
+
+    .about-process-card,
+    .about-meta-card {
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        background: #FFFFFF;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .about-process-card {
+        padding: 14px;
+    }
+
+    .about-process-frame {
+        position: relative;
+        min-height: 320px;
+        border-radius: 10px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 50% 16%, rgba(11, 125, 193, 0.10), transparent 20%),
+            radial-gradient(circle at 50% 72%, rgba(183, 134, 11, 0.08), transparent 22%),
+            linear-gradient(180deg, #F0F4F8, #F0F4F8);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .about-wall {
+        position: absolute;
+        top: 28px;
+        bottom: 28px;
+        width: 10px;
+        background: linear-gradient(180deg, rgba(180, 190, 205, 0.18), rgba(180, 190, 205, 0.08));
+    }
+
+    .about-wall.left {
+        left: 18px;
+    }
+
+    .about-wall.right {
+        right: 18px;
+    }
+
+    .about-substrate {
+        position: absolute;
+        top: 34px;
+        left: 50%;
+        width: 58%;
+        height: 18px;
+        transform: translateX(-50%);
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(0, 170, 255, 0.4), rgba(0, 170, 255, 0.2));
+        border: 1px solid rgba(0, 205, 255, 0.65);
+        box-shadow: 0 0 20px rgba(0, 170, 255, 0.18);
+    }
+
+    .about-film {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 34%;
+        height: 14px;
+        transform: translateX(-50%);
+        border-radius: 7px;
+        background: linear-gradient(180deg, rgba(255, 212, 138, 0.95), rgba(255, 146, 58, 0.45));
+        box-shadow: 0 0 18px rgba(255, 163, 76, 0.16);
+    }
+
+    .about-plasma {
+        position: absolute;
+        top: 52px;
+        bottom: 82px;
+        left: 50%;
+        width: 42%;
+        transform: translateX(-50%);
+        background: linear-gradient(180deg, rgba(11, 125, 193, 0.20), rgba(183, 134, 11, 0.10));
+        border-left: 1px solid rgba(11, 125, 193, 0.20);
+        border-right: 1px solid rgba(11, 125, 193, 0.20);
+    }
+
+    .about-particle {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(183, 134, 11, 0.90);
+        box-shadow: 0 0 10px rgba(183, 134, 11, 0.18);
+    }
+
+    .about-ion {
+        position: absolute;
+        width: 2px;
+        height: 46px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(11, 125, 193, 0.88), rgba(11, 125, 193, 0));
+        transform-origin: top center;
+        opacity: 0.95;
+    }
+
+    .about-targets {
+        position: absolute;
+        left: 50%;
+        bottom: 34px;
+        width: 46%;
+        transform: translateX(-50%);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .about-target {
+        width: 84px;
+        height: 30px;
+        border-radius: 50%;
+        opacity: 0.9;
+    }
+
+    .about-target.central {
+        width: 76px;
+        height: 24px;
+        margin-bottom: 70px;
+        background: linear-gradient(180deg, rgba(120, 67, 25, 0.96), rgba(78, 42, 16, 0.9));
+        border: 1px solid rgba(235, 135, 54, 0.35);
+        box-shadow: 0 0 24px rgba(255, 146, 58, 0.12);
+    }
+
+    .about-target.left {
+        background: linear-gradient(180deg, rgba(198, 200, 212, 0.34), rgba(94, 99, 116, 0.42));
+    }
+
+    .about-target.right {
+        background: linear-gradient(180deg, rgba(138, 158, 135, 0.34), rgba(76, 90, 76, 0.42));
+    }
+
+    .about-process-caption {
+        position: absolute;
+        inset: 0;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: #1A2332;
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    .about-process-caption span {
+        position: absolute;
+        white-space: nowrap;
+    }
+
+    .about-process-caption span:nth-child(1) {
+        left: 11%;
+        bottom: 14px;
+    }
+
+    .about-process-caption span:nth-child(2) {
+        left: 50%;
+        top: 140px;
+        transform: translateX(-50%);
+    }
+
+    .about-process-caption span:nth-child(3) {
+        right: 20%;
+        top: 66px;
+    }
+
+    .about-meta-card {
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .about-meta-title {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--grey2);
+    }
+
+    .about-meta-copy {
+        font-size: 13px;
+        line-height: 1.8;
+        color: var(--grey1);
+    }
+
+    .about-pill-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .about-pill {
+        padding: 12px 13px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #FFFFFF;
+    }
+
+    .about-pill-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--grey2);
+        margin-bottom: 5px;
+    }
+
+    .about-pill-value {
+        color: #1A2332;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    #features.compact-section,
+    #process.compact-section,
+    #model-limitations.compact-section {
+        max-width: var(--section-max);
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    #features.compact-section {
+        padding: 4px 28px 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    #features.compact-section .ps-head {
+        max-width: var(--section-max);
+        margin: 0 auto 12px !important;
+        text-align: center;
+    }
+
+    #features.compact-section .pc-text {
+        max-width: var(--section-max);
+        margin: 0 auto !important;
+        padding: 16px 20px !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: linear-gradient(180deg, #FFFFFF, #FFFFFF);
+    }
+
+    #process.compact-section {
+        padding: 10px 28px 18px !important;
+    }
+
+    #process.compact-section .ps-head {
+        margin-bottom: 16px !important;
+        padding-bottom: 10px;
+        max-width: var(--section-max) !important;
+        text-align: center;
+    }
+
+    #process.compact-section .ps-grid {
+        gap: 18px !important;
+        grid-template-columns: 1fr 1fr !important;
+        max-width: var(--section-max) !important;
+        margin: 0 auto !important;
+    }
+
+    #process.compact-section .pc {
+        padding: 28px 26px 24px !important;
+    }
+
+    #process.compact-section .gold-divider {
+        display: none;
+    }
+
+    #model-limitations.compact-section {
+        padding: 0 28px 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    #model-limitations.compact-section {
+        max-width: var(--section-max);
+    }
+
+    .ps-title {
+        font-size: 32px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .ps-sub {
+        font-size: 12px;
+        letter-spacing: 1.8px;
+    }
+
+    .pc-title {
+        line-height: 1.08;
+    }
+
+    .pc-text,
+    .designer-text,
+    .about-meta-copy,
+    .about-pill-value,
+    .about-visual-note {
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .screenshot-caption,
+    .formula-tag,
+    .about-visual-head,
+    .about-mini-label,
+    .about-pill-label,
+    .designer-chip {
+        font-size: 9px;
+        letter-spacing: 1.6px;
+    }
+
+    .formula-box,
+    .pc,
+    .designer-card,
+    .about-process-card,
+    .about-meta-card {
+        border-radius: 10px;
+    }
+
+    .about-wave-band {
+        max-width: var(--section-max);
+        margin: 12px auto 0;
+        padding: 0 28px 10px;
+        color: #0B7DC1;
+    }
+
+    .about-wave-panel {
+        position: relative;
+        overflow: hidden;
+        height: 76px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        background:
+            linear-gradient(180deg, rgba(235, 248, 255, 0.92), rgba(255, 255, 255, 0.98));
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .about-wave-panel svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+
+    .about-section-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+        gap: 18px;
+        align-items: start;
+    }
+
+    .about-main-panel,
+    .about-side-panel {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: linear-gradient(180deg, #FFFFFF, #FFFFFF);
+    }
+
+    .about-main-panel {
+        padding: 22px 24px;
+    }
+
+    .about-side-panel {
+        padding: 18px;
+    }
+
+    .about-side-stack {
+        display: grid;
+        gap: 14px;
+    }
+
+    .about-inline-head {
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .about-inline-title {
+        font-family: var(--cond);
+        font-size: 28px;
+        line-height: 1;
+        text-transform: uppercase;
+        color: var(--white);
+        margin-bottom: 6px;
+    }
+
+    .about-inline-sub {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--gold-lt);
+    }
+
+    .about-feature-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .about-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        color: var(--grey1);
+        line-height: 1.9;
+    }
+
+    .about-feature-list li + li {
+        margin-top: 8px;
+    }
+
+    .about-mini-card {
+        padding: 14px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(160, 175, 198, 0.12);
+        background: #FFFFFF;
+    }
+
+    .about-mini-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--grey2);
+        margin-bottom: 6px;
+    }
+
+    .about-mini-value {
+        font-size: 13px;
+        line-height: 1.7;
+        color: var(--grey1);
+    }
+
+    .process-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .process-stack {
+        display: grid;
+        gap: 18px;
+    }
+
+    .about-limit-card {
+        padding: 20px;
+        border: 1px solid rgba(11, 125, 193, 0.20);
+        border-radius: 10px;
+        background: #EBF8FF;
+    }
+
+    .about-limit-card .formula-tag {
+        margin-bottom: 10px;
+    }
+
+    .designer-section {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 0 28px 22px;
+    }
+
+    .designer-card {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 22px;
+        border: 1px solid var(--border);
+        background: #FFFFFF;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .designer-side {
+        padding: 22px 20px;
+        border-right: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(77, 183, 255, 0.10), rgba(77, 183, 255, 0.02));
+    }
+
+    .designer-photo {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid rgba(77, 183, 255, 0.24);
+        background: #F0F4F8;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    .designer-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .designer-tag {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 2.4px;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 14px;
+    }
+
+    .designer-name {
+        font-family: var(--cond);
+        font-size: 28px;
+        line-height: 0.95;
+        color: var(--white);
+        text-transform: uppercase;
+    }
+
+    .designer-role {
+        margin-top: 14px;
+        font-family: var(--mono);
+        font-size: 10px;
+        line-height: 1.7;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        color: var(--grey1);
+    }
+
+    .designer-body {
+        padding: 22px 24px 20px;
+    }
+
+    .designer-title {
+        font-family: var(--cond);
+        font-size: 22px;
+        color: var(--gold-lt);
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .designer-text {
+        font-size: 14px;
+        line-height: 1.8;
+        color: var(--grey1);
+        max-width: 720px;
+    }
+
+    .designer-text strong {
+        color: var(--white);
+        font-weight: 600;
+    }
+
+    .designer-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .designer-chip {
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #F0F4F8;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--grey1);
+    }
+
+    @media (max-width: 768px) {
+        #hero {
+            padding: 40px 20px !important;
+        }
+
+        .ps-grid {
+            grid-template-columns: 1fr !important;
+            padding: 0 20px;
+        }
+
+        .pc {
+            padding: 30px !important;
+        }
+
+        .pc-text {
+            font-size: 16px !important;
+            line-height: 1.6 !important;
+        }
+
+        .formula-eq {
+            font-size: 8px !important;
+            overflow-x: auto;
+        }
+
+        #features .pc-text {
+            flex-direction: column;
+        }
+
+        #features.compact-section .pc-text,
+        #process.compact-section .ps-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        #hero.compact-hero {
+            grid-template-columns: 1fr !important;
+            padding: 18px 18px 12px;
+        }
+
+        #hero.compact-hero .hero-left {
+            padding: 24px 18px 18px !important;
+            text-align: center !important;
+        }
+
+        .about-overview-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .about-section-grid,
+        .about-feature-columns,
+        .process-columns {
+            grid-template-columns: 1fr;
+        }
+
+        .designer-card {
+            grid-template-columns: 1fr;
+        }
+
+        .designer-side {
+            border-right: none;
+            border-bottom: 1px solid var(--border);
+        }
+    }
+</style>
+</head>
+
+<body>
+
+    <canvas id="cvs"></canvas>
+    <div id="vignette"></div>
+
+    <div id="page">
+
+        <!-- -- NAV -- -->
+        <nav id="nav">
+            <div class="nav-left">
+        <a href="index.html" class="nav-logo" style="text-decoration: none; color: #FFFFFF;">
+                    <img src="img/sputterone-icon.png" alt="SputterOne" style="width:28px;height:28px;object-fit:contain;border-radius:6px;display:block;">
+                    Sputtering Simulator
+                </a>
+                <div class="nav-logo-sep"></div>
+                <div class="nav-tag">Version 1 - Educational</div>
+            </div>
+            <div class="nav-right">
+          <a class="nav-link" href="tutorial.html">Tutorial</a>
+          <a class="nav-link" href="labs.html">Virtual Labs</a>
+                <div class="nav-status">
+                    <div class="status-dot"></div>
+                    System Ready
+                </div>
+            </div>
+        </nav>
+
+        <!-- -- ABOUT HEADER -- -->
+        <section id="hero" class="compact-hero"
+            style="margin-bottom: 0; padding-bottom: 10px; border-bottom: none;">
+            <div class="hero-left" style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <div class="hl-label" style="justify-content: center;">
+                    <div class="hl-label-line"></div>
+                    <div class="hl-label-text">Under the Hood</div>
+                    <div class="hl-label-line"></div>
+                </div>
+
+                <h1 class="hero-title" style="font-size: 38px;">
+                    About the
+                    <span class="line-gold">Simulation Model</span>
+                </h1>
+
+                <p class="hero-desc" style="margin: 0 auto;">
+                    This sputtering simulator is designed as an interactive educational tool for understanding the core
+                    physical processes of <strong>magnetron sputtering</strong>.
+                    It bridges the gap between theoretical plasma physics and visual intuition by simulating processes
+                    in real-time right in your browser.
+                </p>
+
+                <div style="text-align:center; margin: 32px auto 0;">
+                    <a
+                        href="brochure.pdf"
+                        target="_blank"
+                        rel="noopener"
+                        id="btn-open-brochure"
+                        style="display:inline-flex; align-items:center; gap:10px;
+                               padding:12px 28px; border-radius:var(--radius);
+                               background:var(--gold); color:#000;
+                               font-family:var(--mono); font-size:11px;
+                               letter-spacing:2px; text-transform:uppercase;
+                               font-weight:700; text-decoration:none;
+                               transition:opacity 0.2s ease;"
+                        onmouseover="this.style.opacity='0.82'"
+                        onmouseout="this.style.opacity='1'"
+                    >
+                        <svg width="14" height="16" viewBox="0 0 14 16" fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 0h7l5 5v11H2V0z" fill="none" stroke="#000"
+                                  stroke-width="1.4"/>
+                            <path d="M9 0v5h5" fill="none" stroke="#000" stroke-width="1.4"/>
+                            <path d="M4 9h6M4 12h4" stroke="#000" stroke-width="1.2"
+                                  stroke-linecap="round"/>
+                        </svg>
+                        View Product Brochure (PDF)
+                    </a>
+                    <div style="margin-top:10px; font-family:var(--mono); font-size:9px;
+                                letter-spacing:1px; color:var(--text-dim);">
+                        Opens in a new tab &nbsp;&middot;&nbsp; PDF format
+                    </div>
+                    <div style="margin-top:14px;">
+                        <a
+                            href="brochure.html"
+                            target="_blank"
+                            rel="noopener"
+                            id="btn-open-brochure-html"
+                            style="display:inline-flex; align-items:center; gap:8px;
+                                   padding:9px 20px; border-radius:var(--radius);
+                                   border:1px solid var(--border);
+                                   background:transparent; color:var(--text-primary);
+                                   font-family:var(--mono); font-size:10px;
+                                   letter-spacing:1.5px; text-transform:uppercase;
+                                   font-weight:600; text-decoration:none;
+                                   transition:opacity 0.2s ease;"
+                            onmouseover="this.style.opacity='0.82'"
+                            onmouseout="this.style.opacity='1'"
+                        >
+                            Read Brochure (HTML)
+                        </a>
+                        <div style="margin-top:8px; font-family:var(--mono); font-size:9px;
+                                    letter-spacing:1px; color:var(--text-dim);">
+                            Opens in a new tab &nbsp;&middot;&nbsp; HTML format
+                        </div>
+                    </div>
+                </div>
+
+                <div class="formula-box" style="margin: 30px auto 0;">
+                    <div class="formula-tag">Key Mathematical Models</div>
+                    <div class="formula-eq">\[ Y(E) \sim Q \frac{S_n(E)}{U_0}\left(1-\left(\frac{E_{th}}{E}\right)^{2/3}\right)^{0.25} \]</div>
+                    <div class="formula-eq">\[ \lambda = \frac{kT}{\sqrt{2} \pi d^2 P} \]</div>
+                    <div class="formula-eq">\[ \mathbf{F} = q(\mathbf{E} + \mathbf{v} \times \mathbf{B}) \]</div>
+                    <div class="formula-eq">\[ r_L = \frac{mv}{qB} \]</div>
+                    <div class="formula-eq">\[ f(E) \propto \frac{E}{(E + U_s)^3} \]</div>
+                </div>
+            </div>
+            <div class="about-visual">
+                <div class="about-visual-head">
+                    <span>Model Overview</span>
+                    <span>Plasma / Transport / Film</span>
+                </div>
+                <div class="about-visual-body">
+                    <div class="about-overview-grid">
+                        <div class="about-process-card">
+                            <div class="about-process-frame" aria-label="Illustrative sputtering chamber visual">
+                                <div class="about-wall left"></div>
+                                <div class="about-wall right"></div>
+                                <div class="about-film"></div>
+                                <div class="about-substrate"></div>
+                                <div class="about-plasma"></div>
+                                <div class="about-ion" style="left: 46%; top: 84px; transform: rotate(-6deg);"></div>
+                                <div class="about-ion" style="left: 52%; top: 74px; transform: rotate(2deg);"></div>
+                                <div class="about-ion" style="left: 58%; top: 92px; transform: rotate(8deg);"></div>
+                                <div class="about-ion" style="left: 40%; top: 120px; transform: rotate(-8deg);"></div>
+                                <div class="about-particle" style="left: 48%; top: 132px;"></div>
+                                <div class="about-particle" style="left: 53%; top: 156px;"></div>
+                                <div class="about-particle" style="left: 57%; top: 118px;"></div>
+                                <div class="about-particle" style="left: 42%; top: 172px;"></div>
+                                <div class="about-particle" style="left: 60%; top: 198px;"></div>
+                                <div class="about-particle" style="left: 50%; top: 222px;"></div>
+                                <div class="about-targets">
+                                    <div class="about-target left"></div>
+                                    <div class="about-target central"></div>
+                                    <div class="about-target right"></div>
+                                </div>
+                                <div class="about-process-caption">
+                                    <span>Target Array</span>
+                                    <span>Transport Column</span>
+                                    <span>Film Growth</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="about-meta-card">
+                            <div class="about-meta-title">What This Panel Shows</div>
+                            <div class="about-meta-copy">
+                                A reduced-order view of the sputtering chamber, highlighting where plasma forms, how energetic species travel through the gas phase, and where thin-film growth occurs on the substrate.
+                            </div>
+                            <div class="about-pill-grid">
+                                <div class="about-pill">
+                                    <div class="about-pill-label">Plasma Zone</div>
+                                    <div class="about-pill-value">Magnetically confined ionization region above the cathode assembly.</div>
+                                </div>
+                                <div class="about-pill">
+                                    <div class="about-pill-label">Transport</div>
+                                    <div class="about-pill-value">Ions accelerate downward while sputtered atoms scatter upward toward the substrate.</div>
+                                </div>
+                                <div class="about-pill">
+                                    <div class="about-pill-label">Film Growth</div>
+                                    <div class="about-pill-value">Deposited material accumulates on the substrate as a thin-film layer over time.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-visual-note">
+                    The panel summarizes the three educational layers of the simulator: plasma generation, particle transport, and evolving film deposition.
+                </div>
+            </div>
+        </section>
+
+        <!-- -- UNIQUE FEATURES -- -->
+        <section id="features" class="compact-section" style="padding: 8px 0 0; max-width: 1160px; margin: 0 auto;">
+            <div class="ps-head" style="margin-bottom: 20px;">
+                <div class="ps-title">Unique Capabilities</div>
+            </div>
+            <div class="pc-text" style="display: flex; gap: 20px; justify-content: space-between; flex-wrap: wrap;">
+                <ul style="list-style: none; padding: 0; margin: 0; color: var(--grey1); line-height: 1.8;">
+                    <li><span class="heading-icon"
+                            style="width:16px;height:16px;font-size:10px;background:none;">&#10003;</span> Multi-gun
+                        co-sputtering (up to 3 targets: Cu, Al, Zn, Sn, W, Mo)</li>
+                    <li><span class="heading-icon"
+                            style="width:16px;height:16px;font-size:10px;background:none;">&#10003;</span> Independent DC/RF
+                        per gun</li>
+                </ul>
+                <ul style="list-style: none; padding: 0; margin: 0; color: var(--grey1); line-height: 1.8;">
+                    <li><span class="heading-icon"
+                            style="width:16px;height:16px;font-size:10px;background:none;">&#10003;</span> Real-time plasma
+                        confinement, electron spirals, racetrack visualization</li>
+                    <li><span class="heading-icon"
+                            style="width:16px;height:16px;font-size:10px;background:none;">&#10003;</span> Reactive mode basics
+                        (O2 in Ar) with future poisoning effects</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="gold-divider"></div>
+
+        <!-- -- MODEL EXPLANATION GRID -- -->
+        <section id="process" class="compact-section" style="padding-top: 0;">
+            <div class="ps-head" style="max-width: 1160px; margin: 0 auto 18px;">
+                <div class="ps-title">Physics Engine Breakdown</div>
+                <div class="ps-sub">Core mechanisms simulated in real-time</div>
+            </div>
+
+            <div class="ps-grid" style="grid-template-columns: 1fr; max-width: 1160px; margin: 0 auto; gap: 18px;">
+
+                <!-- MODEL 1: Gas & Plasma -->
+                <div class="pc" style="padding: 40px;">
+                    <div class="pc-num" style="font-size: 14px; margin-bottom: 20px;"><span>01</span> Plasma Generation
+                        & Confinement</div>
+                    <div class="pc-title" style="font-size: 24px; color: var(--gold-lt);">
+                        <span class="heading-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="3" />
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg>
+                        </span>
+                        Electron Impact Ionization
+                    </div>
+                    <div class="pc-text" style="font-size: 15px; margin-top: 15px;">
+                        <p style="margin-bottom: 15px;">The simulation begins by modeling the background Argon gas at a
+                            specific pressure. When high negative voltage is applied to the cathode (target), free
+                            electrons are accelerated away from it. These energetic electrons collide with neutral Argon
+                            atoms (Ar), stripping away outer electrons to create positive Argon ions (Ar+) in a process
+                            called <strong>electron impact ionization</strong>.</p>
+
+                        <div class="screenshot-wrap">
+                            <img src="img/chamber_current.png" alt="Current chamber view">
+                            <div class="screenshot-caption">Fig 1. Current chamber view showing the updated
+                                substrate, transport region, plasma zone, and target layout</div>
+                        </div>
+
+                        <p>To increase ionization efficiency, a <strong>magnetic field (B)</strong> is introduced
+                            behind the target. In this simulator, magnetic confinement is represented with a
+                            <strong>reduced-order racetrack model</strong> rather than full Lorentz-force trajectory
+                            integration. The result is a dense localized plasma region near the target surface, which
+                            increases the ionization probability of Argon gas and thus the sputtering rate.</p>
+                    </div>
+                </div>
+
+                <div class="gold-divider"></div>
+
+                <!-- MODEL 2: Sputtering Yield -->
+                <div class="pc" style="padding: 40px;">
+                    <div class="pc-num" style="font-size: 14px; margin-bottom: 20px;"><span>02</span> Target Interaction
+                    </div>
+                    <div class="pc-title" style="font-size: 24px; color: var(--gold-lt);">
+                        <span class="heading-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <circle cx="12" cy="12" r="6" />
+                                <circle cx="12" cy="12" r="2" />
+                            </svg>
+                        </span>
+                        Yamamura Yield Mechanics
+                    </div>
+                    <div class="pc-text" style="font-size: 15px; margin-top: 15px;">
+                        <p style="margin-bottom: 15px;">Once created, the positive Ar+ ions are accelerated
+                            across the cathode sheath and crash into the target surface. The physical
+                            ejection of target atoms is modeled using a <strong>reduced-order Yamamura/Bohdansky-style
+                                sputtering yield fit</strong> with material-dependent binding energy, threshold energy,
+                            and ion-energy scaling.</p>
+
+                        <p style="margin-bottom: 15px;">The simulation calculates the <strong>Sputtering Yield
+                                (Y)</strong> - the average number of sputtered atoms per incident ion. This calculation
+                            now follows a <strong>Yamamura-inspired energy dependence</strong>, combining projectile-target
+                            mass transfer, a stopping-power term, a threshold-energy correction, and the surface binding
+                            energy of the target material.</p>
+
+                        <p>This is why switching target materials (e.g., from Copper to Tungsten) in the simulator
+                            immediately alters the visual ejection rate and the calculated yield metrics, reflecting
+                            their different atomic masses, threshold behaviour, and binding energies. A bounded angle
+                            correction is also applied so the yield remains responsive to the reduced-order ion
+                            incidence geometry.</p>
+                    </div>
+                </div>
+
+                <div class="gold-divider"></div>
+
+                <!-- MODEL 3: Transport -->
+                <div class="pc" style="padding: 40px;">
+                    <div class="pc-num" style="font-size: 14px; margin-bottom: 20px;"><span>03</span> Deposition & Film
+                        Growth</div>
+                    <div class="pc-title" style="font-size: 24px; color: var(--gold-lt);">
+                        <span class="heading-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="17" x2="12" y2="21" />
+                            </svg>
+                        </span>
+                        Transport and Mean Free Path
+                    </div>
+                    <div class="pc-text" style="font-size: 15px; margin-top: 15px;">
+                        <p style="margin-bottom: 15px;">Ejected target atoms leave the surface with a kinetic energy
+                            of a few eV and travel through the vacuum chamber towards the substrate. The simulation
+                            uses a <strong>simplified Thompson-like energy sampler</strong> together with pressure-based
+                            gas transport through the concept of <strong>Mean Free Path (MFP, lambda)</strong>.</p>
+
+                        <div class="screenshot-wrap">
+                            <img src="img/Fig_4.png"
+                                alt="Flat radial thickness profiles and transport metrics versus pressure">
+                            <div class="screenshot-caption">Fig 2. Flat radial thickness profiles and transport
+                                metrics across working pressure</div>
+                        </div>
+
+                        <p>At high pressures, sputtered atoms frequently collide with background Argon gas, losing
+                            energy and scattering (thermalization). At low pressures, they experience fewer collisions,
+                            retaining their energy and directionality. The simulator dynamically visualizes this
+                            transport process, demonstrating how adjusting chamber pressure affects the resulting thin
+                            film's uniformity and deposition rate on the substrate.</p>
+                    </div>
+                </div>
+
+                <!-- MODEL 4: Implementation -->
+                <div class="pc" style="padding: 40px; border-color: var(--gold-dk);">
+                    <div class="pc-num"
+                        style="font-size: 14px; margin-bottom: 20px; color: var(--gold-dk); background: none; border: none; padding: 0;">
+                        Technical Implementation</div>
+                    <div class="pc-title" style="font-size: 24px; color: var(--gold-lt);">Browser-Based Simulation Stack
+                    </div>
+                    <div class="pc-text" style="font-size: 15px; margin-top: 15px;">
+                        <p>The entire physics engine is built using vanilla JavaScript and rendered in real-time using
+                            HTML5 Canvas APIs, requiring no external plugins or server-side computations. It combines
+                            reduced-order discharge estimates, current-linked ion spawning, pressure-dependent
+                            transport, and simplified film-growth logic in a browser-friendly framework. The visual
+                            plasma glow and chamber effects are programmatic, keeping the simulator lightweight and
+                            responsive across modern browsers.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="model-limitations" class="compact-section" style="max-width:1160px;margin:0 auto;padding:0 20px;">
+            <div class="formula-box" style="margin:0;">
+                <div class="formula-tag">Model Limitations</div>
+                <div class="formula-eq" style="line-height:1.8;">
+                    This simulator is built for learning and intuition, not fab-grade process fitting. Key approximations to be aware of:<br>
+                    <p style="margin:14px 0 16px;color:var(--text);">
+                        <strong>Vacuum Environment:</strong> SputterOne models the working gas environment only. The simulator assumes the chamber has been evacuated to a base pressure of approximately 1×10⁻⁶ Torr before Ar backfill, consistent with typical turbomolecular-pumped magnetron sputtering systems. Residual gas contamination (H₂O, O₂, N₂, CO at partial pressures of 10⁻⁷–10⁻⁸ Torr) and outgassing effects are outside the scope of the reduced-order model. Users requiring film purity estimates should consult vacuum system design references and residual gas analysis data from their specific chamber.
+                    </p>
+                    (1) The discharge model (voltage, current, ion energy) is a parametric fit tuned to qualitative trends &mdash; it is not a full PIC or fluid plasma solver.<br>
+                    (2) Atom trajectories use a reduced-order cosine emission + Thompson energy sampler, not molecular dynamics or SRIM/TRIM.<br>
+                    (3) Deposition rate and film thickness numbers are scaled for classroom time using internal calibration constants (DEPOSITION_UNITS_PER_LANDING, THICKNESS_NM_PER_PROFILE_UNIT) and will not match absolute fab measurements.<br>
+                    (4) The "Illustrative Yield" shown in the UI applies empirical transport and sticking factors on top of the Yamamura formula &mdash; treat it as a trend indicator, not a quoted yield.<br>
+                    Students moving to real sputter tools should treat all absolute numbers as qualitative guides only.
+                </div>
+            </div>
+        </section>
+
+        <div class="about-wave-band" aria-hidden="true">
+            <div class="about-wave-panel">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M0,76 C150,28 250,28 400,72 C560,120 690,104 835,58 C980,12 1080,20 1200,58 L1200,120 L0,120 Z"
+                          fill="rgba(11,125,193,0.10)"></path>
+                    <path d="M0,92 C180,44 310,50 450,86 C610,126 760,116 900,78 C1040,40 1120,42 1200,72"
+                          fill="none" stroke="rgba(11,125,193,0.28)" stroke-width="2"></path>
+                    <path d="M0,58 C140,90 280,88 420,52 C570,14 700,20 830,52 C970,88 1080,94 1200,64"
+                          fill="none" stroke="rgba(183,134,11,0.22)" stroke-width="2"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- -- FOOTER -- -->
+        <footer id="footer">
+            <div class="ft-l">Interactive Sputtering Simulator Version 1 - Educational Use Only</div>
+            <div class="ft-r">
+                All Rights Reserved
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        /* -----------------------------------------------
+           PARTICLE WAVE - pure canvas, no libraries
+           Muted warm-to-cool palette matching gold theme
+        ----------------------------------------------- */
+        const cvs = document.getElementById('cvs');
+        const ctx = cvs.getContext('2d');
+        let W, H, pts;
+
+        function resize() {
+            W = cvs.width = window.innerWidth;
+            H = cvs.height = window.innerHeight;
+        }
+
+        // Colour palette - warm golds + cool slates, no neon
+        const PAL = [
+            [180, 148, 70],  // warm gold
+            [160, 130, 60],  // amber
+            [120, 138, 175],  // cool slate blue
+            [100, 118, 155],  // muted blue
+            [200, 170, 100],  // light gold
+            [140, 148, 170],  // silver-blue
+        ];
+
+        function mkParticle() {
+            const col = PAL[Math.floor(Math.random() * PAL.length)];
+            return {
+                x: Math.random() * (W || 1400),
+                y: Math.random() * (H || 900),
+                vx: (Math.random() - 0.5) * 0.28,
+                vy: (Math.random() - 0.5) * 0.28,
+                r: Math.random() * 1.6 + 0.4,
+                col,
+                alpha: Math.random() * 0.38 + 0.1,
+                phase: Math.random() * Math.PI * 2,
+                amp: Math.random() * 28 + 8,
+                wfreq: Math.random() * 0.006 + 0.003,
+                t: Math.random() * 500,
+                _dx: 0, _dy: 0,
+            };
+        }
+
+        function init(n) {
+            pts = Array.from({ length: n }, mkParticle);
+        }
+
+        let raf;
+        function loop() {
+            ctx.clearRect(0, 0, W, H);
+
+            for (const p of pts) {
+                p.t += 0.01;
+
+                // Wave oscillation - adds sinusoidal drift
+                const wx = Math.cos(p.t * 0.35 + p.phase) * p.amp * 0.5;
+                const wy = Math.sin(p.t * p.wfreq * 80 + p.phase) * p.amp;
+
+                p.x += p.vx;
+                p.y += p.vy * 0.4;
+
+                // Wrap
+                if (p.x < -20) p.x = W + 10;
+                if (p.x > W + 20) p.x = -10;
+                if (p.y < -20) p.y = H + 10;
+                if (p.y > H + 20) p.y = -10;
+
+                p._dx = p.x + wx;
+                p._dy = p.y + wy;
+
+                // Draw dot
+                const [r, g, b] = p.col;
+                ctx.beginPath();
+                ctx.arc(p._dx, p._dy, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${r},${g},${b},${p.alpha})`;
+                ctx.fill();
+            }
+
+            // Connection lines - close neighbours only
+            const MAX = 110;
+            for (let i = 0; i < pts.length; i++) {
+                for (let j = i + 1; j < pts.length; j++) {
+                    const a = pts[i], b = pts[j];
+                    const dx = a._dx - b._dx, dy = a._dy - b._dy;
+                    const d2 = dx * dx + dy * dy;
+                    if (d2 < MAX * MAX) {
+                        const fade = (1 - Math.sqrt(d2) / MAX) * 0.1;
+                        ctx.beginPath();
+                        ctx.moveTo(a._dx, a._dy);
+                        ctx.lineTo(b._dx, b._dy);
+                        // blend between the two point colours
+                        const [ar, ag, ab] = a.col, [br, bg, bb] = b.col;
+                        ctx.strokeStyle = `rgba(${(ar + br) >> 1},${(ag + bg) >> 1},${(ab + bb) >> 1},${fade})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            raf = requestAnimationFrame(loop);
+        }
+
+        // Live chamber ticker
+        function tick() {
+            const t = Date.now() / 1200;
+            document.getElementById('dyn-y').textContent = (1.5 + Math.sin(t * 0.6) * 0.45).toFixed(2);
+            document.getElementById('dyn-m').textContent = (2.1 + Math.cos(t * 0.5) * 0.55).toFixed(1) + ' cm';
+        }
+
+        window.addEventListener('resize', () => { resize(); init(85); });
+        resize();
+        init(85);
+        loop();
+        setInterval(tick, 900);
+    </script>
+    <script>
+        // I18N
+        window.currentLang = 'en';
+        function initLanguage() {
+            const saved = localStorage.getItem('sputter_lang');
+            if (saved && window.TRANSLATIONS[saved]) window.currentLang = saved;
+            else {
+                const nav = navigator.language.toLowerCase();
+                if (nav.startsWith('zh')) window.currentLang = 'zh';
+                else if (nav.startsWith('ta')) window.currentLang = 'ta';
+                else window.currentLang = 'en';
+            }
+            updateAllText();
+        }
+        function setLanguage(l) { if (!window.TRANSLATIONS[l]) return; window.currentLang = l; localStorage.setItem('sputter_lang', l); updateAllText(); }
+        function updateAllText() {
+            const d = window.TRANSLATIONS[window.currentLang]; if (!d) return;
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const k = el.getAttribute('data-lang-key');
+                if (d[k]) el.innerHTML = d[k];
+            });
+            document.querySelectorAll('.lang-btn').forEach(b => {
+                b.style.opacity = b.getAttribute('onclick').includes(window.currentLang) ? '1' : '0.6';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', initLanguage);
+    </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
