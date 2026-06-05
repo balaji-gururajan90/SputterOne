@@ -12,13 +12,6 @@ No installation required. Open in any modern browser:
 ```
 https://balaji-gururajan90.github.io/SputterOne/
 ```
-
-**Offline (desktop app):**
-Download the Electron package from the [Releases](https://github.com/balaji-gururajan90/SputterOne/releases) page and run the installer for your platform.
-
-**Local (from source):**
-Clone the repository and open `index.html` directly in a browser — no server required.
-
 ---
 
 ## 2. Understand the Interface
