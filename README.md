@@ -1,9 +1,10 @@
 # SputterOne
 
-**A Physics-Informed Reduced-Order Magnetron Sputtering Simulation Platform**
+### A Physics-Informed Reduced-Order Magnetron Sputtering Simulation Platform
 
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub Pages](https://img.shields.io/badge/Live-GitHub%20Pages-brightgreen)](https://balaji-gururajan90.github.io/SputterOne/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20727719.svg)](https://doi.org/10.5281/zenodo.20727719)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Live](https://img.shields.io/badge/Live-GitHub%20Pages-brightgreen.svg)](https://balaji-gururajan90.github.io/SputterOne/)
 
 ---
 
