@@ -79,8 +79,6 @@ Magnetron Sputtering Simulation Platform for Process Optimisation
 and Thin-Film Deposition Modelling. Yuan Ze University, Taiwan. 
 https://balaji-gururajan90.github.io/SputterOne/
 ```
-## Citation
-
 If you use SputterOne in research, please cite:
 
 Balaji Gururajan (2026).
