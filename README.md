@@ -83,7 +83,9 @@ https://balaji-gururajan90.github.io/SputterOne/
 If you use SputterOne in research, please cite:
 
 Balaji Gururajan (2026).
-SputterOne v1.0.0: A Physics-Informed Reduced-Order Magnetron Sputtering Simulation Platform.
+SputterOne v1.0.0: A Physics-Informed Reduced-Order 
+Magnetron Sputtering Simulation Platform for Process Optimisation 
+and Thin-Film Deposition Modelling.
 Zenodo.
 https://doi.org/10.5281/zenodo.20727719
 
