@@ -78,7 +78,14 @@ Magnetron Sputtering Simulation Platform for Process Optimisation
 and Thin-Film Deposition Modelling. Yuan Ze University, Taiwan. 
 https://balaji-gururajan90.github.io/SputterOne/
 ```
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20727719.svg)](https://doi.org/10.5281/zenodo.20727719)
+## Citation
+
+If you use SputterOne in research, please cite:
+
+Balaji Gururajan (2026).
+SputterOne v1.0.0: A Physics-Informed Reduced-Order Magnetron Sputtering Simulation Platform.
+Zenodo.
+https://doi.org/10.5281/zenodo.20727719
 
 A `CITATION.cff` file is included for automatic citation parsing by GitHub, Zotero, and Mendeley.
 
