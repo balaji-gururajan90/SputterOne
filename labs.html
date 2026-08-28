@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Lab Modules - SputterOne</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    html { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #FAFAFA;
+      --deep: #FFFFFF;
+      --panel: #FFFFFF;
+      --panel-soft: #F0F4F8;
+      --panel-strong: #FFFFFF;
+      --panel-solid: #FFFFFF;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.14);
+      --bhi: rgba(0, 0, 0, 0.05);
+      --gold: #0B7DC1;
+      --gold-l: #3A9FD4;
+      --gold-lt: #3A9FD4;
+      --gold-d: #085A8F;
+      --gold-dk: #085A8F;
+      --brand-mint: #5AD8BE;
+      --amber: #B7860B;
+      --green: #48BB78;
+      --cyan: #0B7DC1;
+      --white: #1A2332;
+      --grey1: #1A2332;
+      --grey2: #4A5568;
+      --grey3: #718096;
+      --g1: #1A2332;
+      --g2: #4A5568;
+      --g3: #718096;
+      --mono: 'Barlow', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --sans: 'Barlow', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --cond: 'Barlow Condensed', 'Arial Narrow', 'Bahnschrift SemiCondensed', sans-serif;
+      --page-pad: 52px;
+      --radius: 18px;
+    }
+    body {
+      min-height: 100vh;
+      background: var(--black);
+      color: #1A2332;
+      font-size: 15px;
+      line-height: 1.75;
+      font-family: var(--sans);
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 14% 16%, rgba(11, 125, 193, 0.08), transparent 30%),
+        radial-gradient(circle at 78% 20%, rgba(183, 134, 11, 0.06), transparent 34%),
+        linear-gradient(180deg, #FAFAFA, #FAFAFA);
+    }
+    #vignette {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 40%, transparent 35%, rgba(250,250,250,0.18) 100%),
+        linear-gradient(180deg, rgba(250,250,250,0.10) 0%, transparent 14%, transparent 86%, rgba(250,250,250,0.16) 100%);
+    }
+    .bg-art {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg-wave,
+    .bg-ring,
+    .bg-particles,
+    .bg-gridline {
+      position: absolute;
+      opacity: 0.34;
+    }
+    .bg-wave {
+      top: 56px;
+      right: 40px;
+      width: 760px;
+      height: 300px;
+      color: rgba(92, 184, 255, 0.32);
+      filter: drop-shadow(0 0 26px rgba(92, 184, 255, 0.12));
+    }
+    .bg-wave svg { width: 100%; height: 100%; }
+    .bg-ring {
+      left: -40px;
+      bottom: 180px;
+      width: 560px;
+      height: 560px;
+      border-radius: 50%;
+      border: 1px solid rgba(217, 178, 90, 0.18);
+      box-shadow:
+        0 0 0 42px rgba(217, 178, 90, 0.05),
+        0 0 0 104px rgba(92, 184, 255, 0.04),
+        0 0 160px rgba(217, 178, 90, 0.05) inset;
+      transform: rotate(-14deg);
+    }
+    .bg-ring::before,
+    .bg-ring::after {
+      content: '';
+      position: absolute;
+      inset: 52px;
+      border-radius: 50%;
+      border: 1px solid rgba(184, 192, 204, 0.08);
+    }
+    .bg-ring::after {
+      inset: 112px;
+      border-color: rgba(92, 184, 255, 0.08);
+    }
+    .bg-particles {
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 16% 24%, rgba(217, 178, 90, 0.26) 0 1.4px, transparent 2.1px),
+        radial-gradient(circle at 23% 62%, rgba(92, 184, 255, 0.20) 0 1.5px, transparent 2.2px),
+        radial-gradient(circle at 74% 18%, rgba(217, 178, 90, 0.20) 0 1.6px, transparent 2.4px),
+        radial-gradient(circle at 68% 54%, rgba(184, 192, 204, 0.16) 0 1.2px, transparent 2px),
+        radial-gradient(circle at 84% 72%, rgba(92, 184, 255, 0.18) 0 1.3px, transparent 2.1px),
+        radial-gradient(circle at 58% 80%, rgba(217, 178, 90, 0.18) 0 1.3px, transparent 2.1px),
+        radial-gradient(circle at 38% 36%, rgba(184, 192, 204, 0.12) 0 1.1px, transparent 2px),
+        radial-gradient(circle at 92% 34%, rgba(217, 178, 90, 0.14) 0 1.2px, transparent 2px);
+      opacity: 0.68;
+    }
+    .bg-gridline {
+      top: 180px;
+      left: 46%;
+      width: 560px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(184, 192, 204, 0.12), transparent);
+      box-shadow: 0 120px 0 rgba(184, 192, 204, 0.06), 0 240px 0 rgba(184, 192, 204, 0.04);
+      transform: rotate(-12deg);
+    }
+    #page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    #nav {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 0 var(--page-pad); height: 52px; border-bottom:1px solid var(--border);
+      background: rgba(13, 17, 23, 0.97); backdrop-filter: blur(14px); position: sticky; top: 0; z-index: 20;
+    }
+    .nav-left,.nav-right{display:flex;align-items:center;gap:24px;}
+    .nav-logo{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#E0E0E0;text-decoration:none;}
+    .nav-logo img{width:28px;height:28px;object-fit:contain;border-radius:6px;display:block;}
+    .nav-sep{width:1px;height:16px;background:var(--border);}
+    .nav-tag,.nav-link,.nav-status{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#E0E0E0;}
+    .nav-link{text-decoration:none;transition:color .2s;}
+    .nav-link:hover{color:#4DB7FF;}
+    .nav-status{display:flex;align-items:center;gap:8px;padding-left:18px;border-left:1px solid var(--border);}
+    .status-dot{width:5px;height:5px;border-radius:50%;background:#5a9e60;animation:pulse 2.5s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+    .hero {
+      display:grid; grid-template-columns:minmax(0,1.12fr) 400px; gap: 34px;
+      padding: 68px var(--page-pad) 30px; border-bottom:1px solid var(--border);
+    }
+    .hero-label{display:flex;align-items:center;gap:10px;margin-bottom:26px;}
+    .hero-line{width:34px;height:1px;background:var(--gold-dk);}
+    .hero-label span{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);}
+    .hero-title{font-family:var(--cond);font-size:clamp(40px,4.7vw,66px);line-height:0.96;letter-spacing:-1.4px;text-transform:uppercase;margin-bottom:24px;}
+    .hero-title .gold{display:block;color:var(--gold);}
+    .hero-sub{max-width:780px;font-size:18px;line-height:1.75;color:var(--grey1);margin-bottom:26px;}
+    .hero-sub strong{color:var(--white);}
+    .hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 22px;border-radius:10px;border:1px solid var(--border-strong);text-decoration:none;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;transition:transform .18s,border-color .18s,background .18s,color .18s;cursor:pointer;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn-primary{background:var(--brand-mint);color:#13202a;border-color:rgba(90,216,190,.45);font-weight:700;}
+    .btn-secondary{background:transparent;color:var(--grey1);}
+    .btn-success{background:rgba(109,179,129,0.15);color:#d8f0de;border-color:rgba(109,179,129,0.4);}
+    .hero-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:930px;}
+    .hero-card,.side-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px;}
+    .hero-card .k,.side-card h3{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+    .hero-card .v{font-size:18px;font-weight:700;color:var(--white);margin-bottom:6px;}
+    .hero-card .d,.side-card p,.side-card li{font-size:14px;line-height:1.65;color:var(--grey2);}
+    .hero-side{display:grid;gap:16px;align-content:start;}
+    .side-card ul{list-style:none;display:grid;gap:12px;}
+    .side-card li{display:grid;grid-template-columns:16px 1fr;gap:10px;}
+    .side-card li::before{content:'+';color:var(--gold);font-family:var(--mono);}
+    .progress-shell{padding:18px;border-radius:16px;background:var(--panel-soft);border:1px solid rgba(184,192,204,0.1);}
+    .progress-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px;}
+    .progress-row .k{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);}
+    .progress-row .v{font-size:20px;font-weight:700;color:var(--white);}
+    .progress-bar{height:10px;background:rgba(255,255,255,0.05);border-radius:999px;overflow:hidden;border:1px solid rgba(184,192,204,0.08);}
+    .progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold-dk),var(--gold));transition:width .35s ease;}
+
+    .waterfall-wrap{padding: 28px var(--page-pad) 60px;}
+    .waterfall-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:22px;}
+    .waterfall-head h2{font-family:var(--cond);font-size:32px;letter-spacing:-0.7px;text-transform:uppercase;}
+    .waterfall-head p{max-width:720px;color:var(--grey2);line-height:1.7;font-size:14px;}
+    .pathway{position:relative;display:grid;gap:22px;padding-left:42px;}
+    .pathway::before{content:'';position:absolute;left:15px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg, rgba(77,183,255,0.30), rgba(102,209,255,0.18), rgba(184,192,204,0.12));}
+    .module-shell{position:relative;}
+    .node{position:absolute;left:-42px;top:26px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;border:1px solid var(--border);background:var(--panel-solid);color:var(--grey2);z-index:2;}
+    .module-shell.current .node{background:rgba(77,183,255,0.12);border-color:rgba(77,183,255,0.38);color:var(--gold-lt);box-shadow:0 0 0 4px rgba(77,183,255,0.08);}
+    .module-shell.completed .node{background:rgba(109,179,129,0.14);border-color:rgba(109,179,129,0.45);color:#d8f0de;}
+    .module-shell.locked .node{background:rgba(255,255,255,0.03);color:var(--grey3);}
+    .module-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .18s, transform .18s, background .18s;}
+    .module-shell.current .module-card{border-color:rgba(11,125,193,0.28);background:#FFFFFF;}
+    .module-shell.completed .module-card{border-color:rgba(109,179,129,0.28);}
+    .module-shell.locked .module-card{opacity:0.72;}
+    .module-summary{display:grid;grid-template-columns:1.2fr .8fr auto;gap:18px;align-items:center;padding:22px 24px;}
+    .module-main .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);margin-bottom:10px;}
+    .module-main h3{font-size:26px;line-height:1.1;margin-bottom:10px;color:var(--white);}
+    .module-main p{font-size:14px;line-height:1.7;color:var(--grey2);max-width:760px;}
+    .module-status{display:grid;gap:10px;justify-items:start;}
+    .status-pill,.meta-pill{padding:6px 10px;border-radius:999px;font-family:var(--mono);font-size:10px;letter-spacing:1.6px;text-transform:uppercase;border:1px solid var(--border);}
+    .status-pill.current{background:rgba(77,183,255,0.08);color:var(--gold-lt);border-color:rgba(77,183,255,0.30);}
+    .status-pill.completed{background:rgba(109,179,129,0.12);color:#d8f0de;border-color:rgba(109,179,129,0.34);}
+    .status-pill.locked{background:rgba(255,255,255,0.03);color:var(--grey3);}
+    .meta-stack{display:flex;gap:8px;flex-wrap:wrap;}
+    .meta-pill{background:rgba(255,255,255,0.03);color:var(--grey2);}
+    .module-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+    .module-details{display:none;border-top:1px solid var(--border);padding:22px 24px 24px;background:rgba(255,255,255,0.015);}
+    .module-shell.current .module-details{display:grid;gap:18px;}
+    .detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+    .detail-box{padding:14px;border-radius:12px;background:var(--panel-soft);border:1px solid rgba(184,192,204,0.1);}
+    .detail-box .k{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);margin-bottom:8px;}
+    .detail-box .v{font-size:14px;line-height:1.65;color:var(--white);}
+    .detail-split{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;}
+    .stack-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+    .card-list{display:grid;gap:12px;}
+    .mini-card{padding:14px 16px;border-radius:12px;border:1px solid rgba(184,192,204,0.1);background:rgba(255,255,255,0.02);}
+    .mini-card .n{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+    .mini-card p{font-size:14px;line-height:1.7;color:var(--grey1);}
+    .completed-summary{display:none;border-top:1px solid var(--border);padding:16px 24px;background:rgba(109,179,129,0.05);font-size:14px;line-height:1.7;color:var(--grey1);}
+    .module-shell.completed:not(.current) .completed-summary{display:block;}
+
+    footer{padding:0 var(--page-pad) 42px;color:var(--grey2);font-size:13px;line-height:1.7;}
+
+    @media (max-width: 1320px){
+      .hero{grid-template-columns:1fr;}
+      .hero-grid{grid-template-columns:1fr 1fr;}
+      .detail-grid{grid-template-columns:1fr 1fr;}
+      .detail-split,.module-summary{grid-template-columns:1fr;}
+      .module-actions{justify-content:flex-start;}
+    }
+    @media (max-width: 900px){
+      :root{--page-pad:24px;}
+      #nav{height:auto;padding:14px var(--page-pad);gap:16px;flex-wrap:wrap;}
+      .nav-right,.nav-left{gap:16px;flex-wrap:wrap;}
+      .hero-grid,.detail-grid,.detail-split{grid-template-columns:1fr;}
+      .pathway{padding-left:30px;}
+      .node{left:-30px;width:24px;height:24px;font-size:9px;top:24px;}
+    }
+  </style>
+</head>
+<body>
+  <div id="vignette"></div>
+  <div class="bg-art" aria-hidden="true">
+    <div class="bg-particles"></div>
+    <div class="bg-wave">
+      <svg viewBox="0 0 520 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 148C68 148 68 84 128 84C188 84 188 176 248 176C308 176 308 104 368 104C428 104 428 154 512 154" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M16 112C84 112 84 52 152 52C220 52 220 140 288 140C356 140 356 72 424 72C468 72 484 96 512 96" stroke="rgba(217,178,90,0.18)" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M34 188C102 188 102 134 170 134C238 134 238 208 306 208C374 208 374 154 442 154C482 154 494 170 512 170" stroke="rgba(184,192,204,0.12)" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="bg-ring"></div>
+    <div class="bg-gridline"></div>
+  </div>
+  <div id="page">
+    <nav id="nav">
+      <div class="nav-left">
+      <a class="nav-logo" href="index.html">
+          <img src="img/sputterone-icon.png" alt="SputterOne">
+          <span>Sputter<span style="color:#5AD8BE;">One</span></span>
+        </a>
+        <div class="nav-sep"></div>
+        <div class="nav-tag">Virtual Lab Modules</div>
+      </div>
+      <div class="nav-right">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="tutorial.html" class="nav-link">Tutorial</a>
+        <a href="about.html" class="nav-link">About</a>
+        <div class="nav-status"><span class="status-dot"></span> Guided Classroom Mode</div>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="hero-label"><div class="hero-line"></div><span>Sequential experimental pathway</span></div>
+        <h1 class="hero-title"><span class="gold">Virtual Lab</span></h1>
+        <p class="hero-sub">By the end of these guided modules, students will develop a foundational understanding of how pressure, power, geometry, reactive sputtering, and co-sputtering influence thin-film deposition.</p>
+        <div class="hero-actions">
+      <a class="btn btn-primary" href="simulator.html">Open Simulator</a>
+          <button class="btn btn-secondary" id="downloadInstructorGuide">Download Instructor Guide</button>
+          <button class="btn btn-secondary" id="resetProgress">Reset Lab Progress</button>
+        </div>
+        <div class="hero-grid" style="grid-template-columns:1fr;max-width:980px;">
+          <div class="hero-card" style="padding:20px 22px;">
+            <div class="k">How to use this page</div>
+            <div class="v" style="font-size:16px;font-weight:600;line-height:1.8;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;">
+              <span>1. Open the current module</span>
+              <span style="color:var(--grey3);">|</span>
+              <span>2. Run the simulator</span>
+              <span style="color:var(--grey3);">|</span>
+              <span>3. Export CSV data</span>
+              <span style="color:var(--grey3);">|</span>
+              <span>4. Record and discuss results</span>
+            </div>
+            <div class="d" style="margin-top:10px;">Follow the modules in sequence and use the exported outputs to support comparison, reporting, and classroom discussion.</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="side-card">
+          <h3>Recommended classroom use</h3>
+          <p>Students should complete the modules in sequence, export CSV data after each run, and summarize the observed trend before progressing to the next experiment.</p>
+        </div>
+        <div class="side-card">
+          <h3>What students learn</h3>
+          <ul>
+            <li>How chamber pressure changes mean free path and scattering.</li>
+            <li>How power affects discharge state, ion energy, and sputtering yield.</li>
+            <li>How geometry, reactive gas, and co-sputtering alter film outcomes.</li>
+          </ul>
+        </div>
+        <div class="side-card progress-shell">
+          <div class="progress-row"><div class="k">Course progress</div><div class="v" id="progressText">0 / 5</div></div>
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="waterfall-wrap">
+      <div class="waterfall-head">
+        <div>
+          <h2>Guided Module Pathway</h2>
+          <p>Each experiment below includes an objective, controlled variables, suggested starting conditions, recordable outputs, and reflection prompts. Complete the current module to unlock the next one.</p>
+        </div>
+      </div>
+      <div class="pathway" id="pathway"></div>
+    </section>
+
+    <footer>
+      Virtual Lab Modules are intended for qualitative trend learning, guided laboratory exercises, and structured classroom discussion. They do not replace calibrated industrial process development, but they do provide a strong framework for understanding cause-and-effect relationships in sputtering.
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'sputterone_lab_progress_v1';
+    const modules = [
+      {
+        id: 'mfp', idx: '01', title: 'Pressure vs Mean Free Path', level: 'Introductory', time: '15 minutes',
+        objective: 'Investigate how chamber pressure changes mean free path and how gas-phase scattering shifts the process from directional transport toward a scattering-dominated regime.',
+        concept: 'Gas-phase transport and scattering ratio',
+        trend: 'Increasing pressure shortens mean free path, raises d/lambda, and broadens transport.',
+        vary: 'Pressure, with optional target-substrate distance',
+        record: 'Mean free path, scattering ratio, transport regime, deposition rate, uniformity',
+        start: [
+          'Material: Cu | Mode: DC | Power: 250 W',
+          'Pressure sweep: 1.5 mTorr, 6 mTorr, 18 mTorr',
+          'Target-substrate distance: 8 cm | Target dia: 4 in | Substrate dia: 4 in'
+        ],
+        steps: [
+          'Run the simulator at low pressure and record mean free path, scattering ratio, and deposition rate.',
+          'Increase pressure in two additional steps while keeping all other parameters fixed.',
+          'Export summary and time-series CSV after each run and compare the transport regime labels.'
+        ],
+        questions: [
+          'At what pressure does the transport regime clearly move away from ballistic behavior?',
+          'How does deposition rate change as scattering increases?',
+          'Does the radial thickness profile broaden as pressure rises?'
+        ],
+        reveal: [
+          "At 1.5 mTorr the scattering ratio d/λ should be well below 1.0 — transport is ballistic and the deposition rate is at its highest.",
+          "At 6 mTorr the ratio crosses approximately 1.0 and the transport label shifts to Moderate Scattering. You should see the radial profile begin to broaden.",
+          "At 18 mTorr the ratio exceeds 2.0, transport is High Scattering, and the deposition rate drops noticeably because more atoms are redirected before reaching the substrate.",
+          "Physical reason: mean free path λ = kT / (√2 · π · d² · P), so doubling pressure halves λ and doubles the scattering ratio."
+        ]
+      },
+      {
+        id: 'yield', idx: '02', title: 'Power vs Sputtering Yield', level: 'Introductory', time: '12 minutes',
+        objective: 'Examine how applied power changes the reduced-order discharge model and how that change propagates into ion energy, sputtering yield, and deposition rate.',
+        concept: 'Ion energy, discharge state, and material removal',
+        trend: 'Increasing power raises the reduced-order discharge voltage/current and increases yield and rate.',
+        vary: 'Power and target material',
+        record: 'Representative voltage, ion energy, sputtering yield, deposition rate, efficiency',
+        start: [
+          'Material sweep: Cu, Al, Zn',
+          'Power sweep: 120 W, 250 W, 400 W',
+          'Pressure: 4 mTorr | Magnetic field: 0.03 T | Distance: 8 cm'
+        ],
+        steps: [
+          'Select a material and run the simulator at low, medium, and high power settings.',
+          'Record representative voltage, ion energy, yield, and deposition rate for each condition.',
+          'Repeat the same power sweep for a second material and compare the response qualitatively.'
+        ],
+        questions: [
+          'Does yield increase linearly with power across the full range?',
+          'Which material shows the strongest response to increasing power?',
+          'How does the discharge estimate support the observed trend?'
+        ],
+        reveal: [
+          "Yield increases with power but not linearly — the relationship follows the Yamamura curve, which rises steeply near threshold and flattens at high energy.",
+          "Zn shows the strongest response because its binding energy (1.35 eV) is the lowest in the material set, so less ion energy is needed to eject atoms.",
+          "W and Ta show the weakest response because their binding energies (8.83 eV and 8.10 eV) are the highest, requiring much more ion energy to exceed threshold.",
+          "The discharge voltage rises with power, which raises ion energy, which raises yield — this three-step chain is the core mechanism."
+        ]
+      },
+      {
+        id: 'uniformity', idx: '03', title: 'Geometry vs Uniformity', level: 'Intermediate', time: '18 minutes',
+        objective: 'Study how source geometry and deposition footprint broadening influence radial thickness distribution and final film uniformity.',
+        concept: 'Footprint broadening and radial thickness distribution',
+        trend: 'Matched target and substrate sizes with moderate spreading improve edge coverage and film uniformity.',
+        vary: 'Target diameter, substrate diameter, target-substrate distance',
+        record: 'Center thickness, edge thickness, uniformity, center/edge ratio, edge landing fraction',
+        start: [
+          'Case A: Target 3 in | Substrate 4 in | Distance 8 cm',
+          'Case B: Target 4 in | Substrate 4 in | Distance 8 cm',
+          'Pressure: 3 mTorr | Material: Cu | Power: 250 W'
+        ],
+        steps: [
+          'Run the baseline 3 in target case and export the radial profile CSV.',
+          'Repeat with a 4 in target while keeping all other conditions fixed.',
+          'Optionally increase target-substrate distance and inspect whether edge coverage changes.'
+        ],
+        questions: [
+          'Which geometry produces the best center-to-edge balance?',
+          'How does changing distance alter the footprint width?',
+          'Does improved footprint matching translate directly into improved uniformity?'
+        ],
+        reveal: [
+          "When target diameter equals substrate diameter the center is well coated but edges are thin — the target footprint does not extend far enough.",
+          "Increasing target diameter relative to substrate diameter improves edge coverage because the cosine emission lobe from the outer racetrack zone now reaches the substrate edge.",
+          "Increasing target-substrate distance broadens the deposition footprint through gas scattering and geometric spreading, improving uniformity up to a point, after which scattering losses reduce the overall rate.",
+          "Best uniformity is typically found when target diameter is 20–40% larger than substrate diameter and distance is in the moderate scattering regime (d/λ near 1.0–1.5)."
+        ]
+      },
+      {
+        id: 'reactive', idx: '04', title: 'Reactive Sputtering and Poisoning', level: 'Advanced', time: '20 minutes',
+        objective: 'Explore how the reduced-order reactive sputtering model captures target poisoning, hysteresis, and the transition between metallic and poisoned operating modes.',
+        concept: 'Poisoning, hysteresis, and effective yield suppression',
+        trend: 'Increasing reactive-gas fraction reduces effective metallic yield and introduces history-dependent behavior.',
+        vary: 'Oxygen fraction, power mode, power',
+        record: 'Effective yield, poisoning state, hysteresis, deposition rate, process status',
+        start: [
+          'Material: Al | Mode: RF | Power: 240 W',
+          'Pressure: 12 mTorr | Oxygen sweep: 0%, 15%, 30%',
+          'Magnetic field: 0.03 T | Distance: 10 cm'
+        ],
+        steps: [
+          'Run the metallic baseline with zero oxygen and record effective yield and rate.',
+          'Increase oxygen gradually and note the change in poisoning and hysteresis state.',
+          'Compare the process diagnostics and export the summary CSV for each gas condition.'
+        ],
+        questions: [
+          'How quickly does the effective yield drop as reactive gas increases?',
+          'Does RF mode help sustain the discharge in the reactive case?',
+          'Which outputs best indicate the transition toward poisoned operation?'
+        ],
+        reveal: [
+          "At 0% O2 the yield is at its clean-metal value and the process is in metallic mode — high rate, low resistance film.",
+          "As O2 increases past roughly 15–20%, target poisoning rises sharply. The yield drops because the oxide layer on the target has a higher binding energy and lower sputter efficiency.",
+          "The hysteresis indicator shows that once poisoning is established it does not immediately reverse when you reduce O2 — you need to drop O2 significantly below the onset value to return to metallic mode. This is the classic reactive sputtering hysteresis loop.",
+          "RF mode is more resistant to poisoning than DC because the self-bias oscillation partially cleans the target surface each half-cycle."
+        ]
+      },
+      {
+        id: 'cosputter', idx: '05', title: 'Co-Sputtering Composition Control', level: 'Advanced', time: '20 minutes',
+        objective: 'Use dual-gun sputtering to study how independent source settings control film composition while maintaining acceptable process stability and coverage.',
+        concept: 'Multi-source mixing and film-composition tuning',
+        trend: 'Changing the relative power of two active guns shifts film composition and total deposition behavior.',
+        vary: 'Power of Gun 1 and Gun 2, material pair, operating mode',
+        record: 'Film mix, per-gun contribution, deposition rate, profile shape, total power',
+        start: [
+          'Gun 1: Cu, DC, 240 W | Gun 2: Al, RF, 220 W',
+          'Pressure: 10 mTorr | Distance: 10 cm',
+          'Target dia: 4 in | Substrate dia: 4 in'
+        ],
+        steps: [
+          'Activate two guns and record the initial film composition estimate.',
+          'Increase the power of one gun while decreasing the other to create a second composition point.',
+          'Export summary and profile CSV files and compare total rate against composition shift.'
+        ],
+        questions: [
+          'How strongly does film composition follow the relative gun powers?',
+          'Does changing the RF/DC balance alter total deposition rate noticeably?',
+          'What tradeoff appears between composition control and profile uniformity?'
+        ],
+        reveal: [
+          "Film composition tracks the ratio of active gun powers, but not linearly — each material has a different sputtering yield, so equal power does not mean equal composition.",
+          "Cu dominates at equal power settings because its yield is higher than Al at the same ion energy. To approach a 50/50 Cu:Al film you need to reduce Cu power or increase Al power.",
+          "Adding a third gun (Zn) at low power introduces a small Zn fraction disproportionate to its power fraction because Zn has the highest yield in the material set (lowest binding energy).",
+          "The exported film mix column in the CSV shows the proportional deposited amounts — use this to back-calculate what power ratio would be needed to hit a target composition."
+        ]
+      }
+    ];
+
+    function loadProgress(){
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return { completed: [] };
+        const parsed = JSON.parse(raw);
+        return { completed: Array.isArray(parsed.completed) ? parsed.completed : [] };
+      } catch {
+        return { completed: [] };
+      }
+    }
+
+    function saveProgress(progress){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    }
+
+    function buildInstructorGuideText(){
+      const separator = '─────────────────────────────────────────────';
+      const generated = new Date().toLocaleString();
+      const lines = [
+        'SPUTTERING SIMULATOR — INSTRUCTOR GUIDE',
+        'Dr. Balaji Gururajan | Yuan Ze University',
+        `Generated: ${generated}`,
+        '',
+        'This document is for instructor use only. It contains expected results and marking guidance for all five virtual lab modules. Do not distribute to students.',
+        separator,
+        ''
+      ];
+
+      modules.forEach((m) => {
+        lines.push(
+          separator,
+          `MODULE ${m.idx}: ${m.title}`,
+          `Level: ${m.level} | Estimated time: ${m.time}`,
+          separator,
+          '',
+          'LEARNING OBJECTIVE',
+          m.objective,
+          '',
+          'KEY CONCEPT',
+          m.concept,
+          '',
+          'EXPECTED TREND',
+          m.trend,
+          '',
+          'SUGGESTED STARTING CONDITIONS',
+          ...m.start.map(item => `• ${item}`),
+          '',
+          'PROCEDURE',
+          ...m.steps.map((item, idx) => `${idx + 1}. ${item}`),
+          '',
+          'REFLECTION QUESTIONS (with marking guidance)'
+        );
+
+        m.questions.forEach((question, idx) => {
+          lines.push(
+            `${idx + 1}. ${question}`,
+            '',
+            `Expected answer: ${m.reveal[idx] || ''}`,
+            ''
+          );
+        });
+
+        lines.push(
+          'MARKING CRITERIA',
+          '- Correct trend direction identified: 2 marks',
+          "- Physical mechanism explained in student's own words: 3 marks",
+          '- CSV data exported and referenced in answer: 2 marks',
+          '- Reflection question answered with specific values from simulation: 3 marks',
+          'Total: 10 marks per module',
+          '',
+          separator,
+          ''
+        );
+      });
+
+      return lines.join('\n');
+    }
+
+    function downloadInstructorGuide(){
+      const guideText = buildInstructorGuideText();
+      const blob = new Blob([guideText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'instructor_guide.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function getCurrentIndex(progress){
+      for(let i = 0; i < modules.length; i++){
+        if(!progress.completed.includes(modules[i].id)) return i;
+      }
+      return modules.length - 1;
+    }
+
+    function render(){
+      const progress = loadProgress();
+      const currentIndex = getCurrentIndex(progress);
+      const pathway = document.getElementById('pathway');
+      const completedCount = progress.completed.length;
+      document.getElementById('progressText').textContent = `${completedCount} / ${modules.length}`;
+      document.getElementById('progressFill').style.width = `${(completedCount / modules.length) * 100}%`;
+
+      pathway.innerHTML = modules.map((m, i) => {
+        const completed = progress.completed.includes(m.id);
+        const current = !completed && i === currentIndex;
+        const locked = !completed && i > currentIndex;
+        const statusClass = completed ? 'completed' : (current ? 'current' : 'locked');
+        const statusText = completed ? 'Completed' : (current ? 'Current module' : 'Locked');
+        const actionPrimary = completed
+        ? `<a class="btn btn-secondary" href="simulator.html">Reopen in Simulator</a>`
+          : current
+        ? `<a class="btn btn-primary" href="simulator.html">Open in Simulator</a>`
+            : `<button class="btn btn-secondary" disabled style="opacity:.45;cursor:not-allowed;">Unlock previous module first</button>`;
+        const actionComplete = current
+          ? `<button class="btn btn-success" data-complete="${m.id}">Mark Module Complete</button>`
+          : '';
+        const completedSummary = completed
+          ? `<div class="completed-summary">This module has been marked complete. Students can revisit the simulator at any time to repeat the run, export additional CSV data, or compare the results with later modules.</div>`
+          : '';
+        const details = current ? `
+          <div class="module-details">
+            <div class="detail-grid">
+              <div class="detail-box"><div class="k">Physics concept</div><div class="v">${m.concept}</div></div>
+              <div class="detail-box"><div class="k">Expected trend</div><div class="v">${m.trend}</div></div>
+              <div class="detail-box"><div class="k">Parameters to vary</div><div class="v">${m.vary}</div></div>
+              <div class="detail-box"><div class="k">Record these outputs</div><div class="v">${m.record}</div></div>
+            </div>
+            <div class="detail-split">
+              <div>
+                <div class="stack-title">Procedure</div>
+                <div class="card-list">
+                  ${m.steps.map((s, idx) => `<div class="mini-card"><div class="n">Step ${idx + 1}</div><p>${s}</p></div>`).join('')}
+                </div>
+              </div>
+              <div>
+                <div class="stack-title">Reflection questions</div>
+                <div class="card-list">
+                  ${m.questions.map((q, idx) => `<div class="mini-card"><div class="n">Question ${idx + 1}</div><p>${q}</p></div>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="stack-title">Suggested starting conditions</div>
+              <div class="card-list">
+                ${m.start.map((s, idx) => `<div class="mini-card"><div class="n">Condition ${idx + 1}</div><p>${s}</p></div>`).join('')}
+              </div>
+            </div>
+            <div style="margin-top:18px;">
+              <div class="stack-title">What you should observe</div>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-toggle-reveal="${m.id}"
+                aria-expanded="false"
+                style="margin-bottom:12px;"
+              >Reveal expected results</button>
+              <div
+                data-reveal-panel="${m.id}"
+                hidden
+                style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:16px 18px;color:var(--g1);"
+              >
+                <ol style="margin:0;padding-left:18px;display:grid;gap:10px;">
+                  ${m.reveal.map(item => `<li style="line-height:1.7;">${item}</li>`).join('')}
+                </ol>
+              </div>
+            </div>
+          </div>` : '';
+
+        return `
+          <article class="module-shell ${statusClass}">
+            <div class="node">${completed ? 'OK' : m.idx}</div>
+            <div class="module-card">
+              <div class="module-summary">
+                <div class="module-main">
+                  <div class="eyebrow">Module ${m.idx}</div>
+                  <h3>${m.title}</h3>
+                  <p>${m.objective}</p>
+                </div>
+                <div class="module-status">
+                  <div class="status-pill ${statusClass}">${statusText}</div>
+                  <div class="meta-stack">
+                    <span class="meta-pill">${m.level}</span>
+                    <span class="meta-pill">${m.time}</span>
+                  </div>
+                </div>
+                <div class="module-actions">
+                  ${actionPrimary}
+                  ${actionComplete}
+                </div>
+              </div>
+              ${details}
+              ${completedSummary}
+            </div>
+          </article>`;
+      }).join('');
+
+      pathway.querySelectorAll('[data-complete]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-complete');
+          const next = loadProgress();
+          if(!next.completed.includes(id)) next.completed.push(id);
+          saveProgress(next);
+          render();
+        });
+      });
+
+      pathway.querySelectorAll('[data-toggle-reveal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-toggle-reveal');
+          const panel = pathway.querySelector(`[data-reveal-panel="${id}"]`);
+          if(!panel) return;
+          const willShow = panel.hasAttribute('hidden');
+          if(willShow){
+            panel.removeAttribute('hidden');
+            btn.textContent = 'Hide results';
+            btn.setAttribute('aria-expanded', 'true');
+          } else {
+            panel.setAttribute('hidden', '');
+            btn.textContent = 'Reveal expected results';
+            btn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      });
+    }
+
+    document.getElementById('resetProgress').addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    });
+
+    document.getElementById('downloadInstructorGuide').addEventListener('click', downloadInstructorGuide);
+
+    render();
+  </script>
+</body>
+</html>
+
+
+
+
+

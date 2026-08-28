@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics Behind the Simulator - SputterOne</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    html {
+      color-scheme: dark;
+      scroll-behavior: smooth;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #FAFAFA;
+      --panel: #FFFFFF;
+      --panel-2: #F0F4F8;
+      --text: #1A2332;
+      --muted: #4A5568;
+      --dim: #718096;
+      --cyan: #0B7DC1;
+      --cyan-soft: rgba(11, 125, 193, 0.16);
+      --gold: #0B7DC1;
+      --gold-l: #3A9FD4;
+      --gold-d: #085A8F;
+      --brand-mint: #5AD8BE;
+      --amber: #B7860B;
+      --border: rgba(0, 0, 0, 0.08);
+      --success: #48BB78;
+      --warning: #ED8936;
+      --error: #F56565;
+      --sans: 'Barlow', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --cond: 'Barlow Condensed', 'Arial Narrow', 'Bahnschrift SemiCondensed', sans-serif;
+      --mono: 'Barlow', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --page-pad: 52px;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.75;
+    }
+
+    #nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      padding: 0 var(--page-pad);
+      border-bottom: 1px solid var(--border);
+      background: rgba(13, 17, 23, 0.97);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #E0E0E0;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .nav-links a {
+      color: #E0E0E0;
+      text-decoration: none;
+      transition: color 0.18s ease;
+    }
+
+    .nav-links a:hover {
+      color: #4DB7FF;
+    }
+
+    .physics-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .physics-sidebar {
+      width: 220px;
+      min-width: 220px;
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+      background: #F0F4F8;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      padding: 24px 0;
+    }
+
+    .physics-sidebar-header {
+      color: #0B7DC1;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 0 20px 12px 20px;
+    }
+
+    .physics-sidebar a {
+      display: block;
+      padding: 10px 20px;
+      color: #4A5568;
+      font-size: 13px;
+      font-weight: 400;
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .physics-sidebar a:hover,
+    .physics-sidebar a.active {
+      color: #0B7DC1;
+      border-left: 3px solid #0B7DC1;
+      background: rgba(11, 125, 193, 0.06);
+    }
+
+    .physics-content {
+      flex: 1;
+      padding: 40px 56px;
+      overflow-y: auto;
+      max-width: none;
+    }
+
+    .physics-mobile-nav {
+      display: none;
+      width: 100%;
+      margin-bottom: 26px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: #F0F4F8;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    header {
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      color: #0B7DC1;
+      font-size: 48px;
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: 0;
+      margin-bottom: 18px;
+    }
+
+    .subtitle {
+      max-width: none;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.75;
+      text-align: justify;
+    }
+
+    .rule {
+      width: 100%;
+      height: 1px;
+      margin-top: 30px;
+      background: linear-gradient(90deg, var(--cyan), rgba(11, 125, 193, 0));
+    }
+
+    .intro {
+      max-width: none;
+      margin: 32px 0 54px;
+      color: var(--text);
+      font-size: 15px;
+      text-align: justify;
+    }
+
+    section {
+      margin-top: 64px;
+      padding-top: 8px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .section-num {
+      font-family: var(--mono);
+      color: var(--gold);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      color: #0B7DC1;
+      font-size: 32px;
+      line-height: 1.18;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      color: var(--text);
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    p {
+      max-width: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.75;
+      margin-bottom: 20px;
+      text-align: justify;
+    }
+
+    .panel {
+      background: #FFFFFF;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06),
+                  0 0 0 1px rgba(0,0,0,0.03);
+    }
+
+    .equation {
+      margin: 26px 0 22px;
+      padding: 22px 24px;
+      border: 1px solid rgba(11, 125, 193, 0.20);
+      border-radius: 8px;
+      background: #F0F4F8;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06),
+                  0 0 0 1px rgba(0,0,0,0.03);
+      color: #0B7DC1;
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.75;
+      text-align: left;
+      overflow-x: auto;
+    }
+
+    .eq-row {
+      display: grid;
+      grid-template-columns: 12ch 2ch minmax(0, 1fr);
+      column-gap: 8px;
+      align-items: baseline;
+      min-width: 0;
+    }
+
+    .eq-row + .eq-row {
+      margin-top: 10px;
+    }
+
+    .eq-lhs {
+      white-space: nowrap;
+    }
+
+    .eq-eq {
+      text-align: center;
+    }
+
+    .eq-rhs {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .eq-note {
+      color: #4A5568;
+    }
+
+    .eq-section {
+      margin-top: 14px;
+    }
+
+    .eq-table {
+      display: grid;
+      grid-template-columns: 16ch auto;
+      column-gap: 22px;
+      row-gap: 4px;
+      margin-top: 4px;
+    }
+
+    .definitions {
+      margin: 0 0 30px 20px;
+      max-width: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.75;
+    }
+
+    .definitions li {
+      margin: 8px 0;
+      padding-left: 4px;
+    }
+
+    .diagram-wrap {
+      margin: 28px 0 24px;
+      padding: 18px;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 8px;
+      background: #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: auto;
+    }
+
+    .diagram-wrap svg {
+      width: 100%;
+      max-width: 760px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .callout {
+      max-width: none;
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 4px solid #0B7DC1;
+      border-radius: 8px;
+      background: #EBF8FF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06),
+                  0 0 0 1px rgba(0,0,0,0.03);
+      color: #1A2332;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.75;
+    }
+
+    .callout strong {
+      color: #0B7DC1;
+      font-weight: 650;
+    }
+
+    svg text {
+      font-family: var(--mono);
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --page-pad: 20px;
+      }
+
+      #nav {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .physics-sidebar {
+        display: none;
+      }
+
+      .physics-mobile-nav {
+        display: block;
+      }
+
+      .physics-content {
+        padding-top: 38px;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav id="nav">
+    <a class="logo" href="index.html" 
+style="display:flex;align-items:center;
+gap:8px;text-decoration:none;">
+  <img src="img/sputterone-icon.png" 
+  alt="SputterOne" 
+  style="width:26px;height:26px;
+  object-fit:contain;border-radius:6px;">
+  <span style="font-family:'Barlow',
+  'Segoe UI',sans-serif;font-size:11px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:#E0E0E0;">Sputter<span style="color:#5AD8BE;">One</span></span>
+</a>
+    <div class="nav-links">
+      <a href="tutorial.html">Back to Tutorial</a>
+      <a href="about.html">About</a>
+    </div>
+  </nav>
+
+  <div class="physics-layout">
+    <aside class="physics-sidebar">
+      <div class="physics-sidebar-header">CONTENTS</div>
+      <a href="#intro" class="active">Introduction</a>
+      <a href="#yield">1. Sputtering Yield</a>
+      <a href="#lss">2. Nuclear Stopping</a>
+      <a href="#emission">3. Angular Emission</a>
+      <a href="#transport">4. Gas-Phase Transport</a>
+      <a href="#discharge">5. Discharge Model</a>
+      <a href="#uniformity">6. Film Uniformity</a>
+      <a href="#materials">Material Parameters</a>
+    </aside>
+
+  <main class="physics-content">
+    <select class="physics-mobile-nav" aria-label="Physics page sections">
+      <option value="#intro">Introduction</option>
+      <option value="#yield">1. Sputtering Yield</option>
+      <option value="#lss">2. Nuclear Stopping</option>
+      <option value="#emission">3. Angular Emission</option>
+      <option value="#transport">4. Gas-Phase Transport</option>
+      <option value="#discharge">5. Discharge Model</option>
+      <option value="#uniformity">6. Film Uniformity</option>
+      <option value="#materials">Material Parameters</option>
+    </select>
+    <header>
+      <h1>Physics Behind the Simulator</h1>
+      <p class="subtitle">The mathematical models implemented in Sputter<span style="color:#5AD8BE;">One</span> — with explanations, equations, and visual diagrams for each.</p>
+      <div class="rule"></div>
+    </header>
+
+    <p class="intro" id="intro">Sputter<span style="color:#5AD8BE;">One</span> implements a reduced-order physics framework in which each stage of the magnetron sputtering process — from ion-solid interaction through gas-phase transport to film growth — is represented by an established semi-empirical or kinetic-theory equation. This page documents each model, explains the physical meaning of every variable, and provides a visual diagram connecting the mathematics to what you observe in the simulator. Use this page alongside the tutorial chapters and virtual laboratory modules to develop a complete understanding of the sputtering process.</p>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num">1.</span>
+        <h2 id="yield">Sputtering Yield</h2>
+      </div>
+
+      <p>When an energetic Ar+ ion strikes the target surface, it initiates a collision cascade — a sequence of momentum-transferring binary collisions that propagates through the near-surface lattice. The sputtering yield Y is defined as the mean number of target atoms ejected per incident ion, and is the central quantity governing deposition rate and material selectivity. Y depends on three things: the ion energy E (higher energy gives higher yield up to a broad maximum), the surface binding energy U0 of the target material (more tightly bound atoms are harder to eject, so high-U0 materials like W and Ta have low yield), and a threshold energy Eth below which the ion does not have enough energy to eject any atoms at all. In the simulator, Y is computed using the Yamamura-Bohdansky semi-empirical formula, which reproduces experimentally measured yield values within 8-15% across the full ion energy range used in magnetron sputtering.</p>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">Y(E)</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">Q · Sn*(epsilon) · [1 - (Eth/E)^(2/3)]^0.25 · (1 - Eth/E)^2</span>
+        </div>
+      </div>
+
+      <ul class="definitions">
+        <li>Y = sputtering yield (atoms per ion)</li>
+        <li>E = incident ion energy (eV)</li>
+        <li>Q = material-dependent scaling constant</li>
+        <li>Sn*(epsilon) = universal reduced nuclear stopping cross-section (see Section 2)</li>
+        <li>Eth = threshold energy (eV) — minimum ion energy required for sputtering</li>
+        <li>The term [1-(Eth/E)^(2/3)]^0.25 captures the steep rise just above threshold</li>
+        <li>The term (1-Eth/E)^2 provides the near-threshold cutoff behaviour</li>
+      </ul>
+
+      <div class="diagram-wrap" aria-label="Sputtering yield versus ion energy diagram">
+        <svg width="400" height="220" viewBox="0 0 400 220" role="img">
+          <rect x="0" y="0" width="400" height="220" fill="#F0F4F8"></rect>
+          <line x1="54" y1="178" x2="360" y2="178" stroke="#4A5568" stroke-width="1"></line>
+          <line x1="54" y1="178" x2="54" y2="28" stroke="#4A5568" stroke-width="1"></line>
+          <g fill="#4A5568" font-size="9">
+            <text x="50" y="195">0</text>
+            <text x="122" y="195">500</text>
+            <text x="194" y="195">1000</text>
+            <text x="271" y="195">1500</text>
+            <text x="344" y="195">2000</text>
+            <text x="28" y="181">0</text>
+            <text x="28" y="144">1</text>
+            <text x="28" y="106">2</text>
+            <text x="28" y="69">3</text>
+            <text x="28" y="32">4</text>
+            <text x="166" y="213">Ion Energy (eV)</text>
+          </g>
+          <text x="-139" y="16" transform="rotate(-90)" fill="#4A5568" font-size="9">Yield Y (atoms/ion)</text>
+          <path d="M54 178 C58 178, 58 178, 59 178 C66 176, 77 159, 92 134 C116 94, 151 61, 205 52 C244 46, 291 54, 360 70" fill="none" stroke="#4DB7FF" stroke-width="3"></path>
+          <line x1="59" y1="178" x2="83" y2="153" stroke="#C9A84C" stroke-width="1.2" marker-end="url(#arrowGold)"></line>
+          <text x="86" y="150" fill="#C9A84C" font-size="9">Threshold</text>
+          <line x1="215" y1="48" x2="204" y2="54" stroke="#C9A84C" stroke-width="1.2" marker-end="url(#arrowGold)"></line>
+          <text x="224" y="47" fill="#C9A84C" font-size="9">Peak region</text>
+          <text x="172" y="85" fill="#4DB7FF" font-size="9">Cu (Q=0.115, Eth=24 eV)</text>
+          <defs>
+            <marker id="arrowGold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L7,3 z" fill="#C9A84C"></path>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="callout"><strong>What you see in the simulator:</strong> The MAX YIELD readout in the Quick Indicators panel shows Y for the current ion energy. Increase the power slider and watch Y increase. Switch from Cu to W and observe how the lower yamQ and higher U0 of W dramatically reduces the yield — and therefore the deposition rate.</div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num">2.</span>
+        <h2 id="lss">Nuclear Stopping — The LSS Function</h2>
+      </div>
+
+      <p>The nuclear stopping term Sn*(epsilon) quantifies how effectively an ion transfers momentum to target atoms through nuclear (elastic) collisions as opposed to electronic (inelastic) excitations. It is evaluated using the universal Lindhard-Scharff-Schiott (LSS) function, which expresses the stopping cross-section as a function of the dimensionless reduced energy epsilon. The reduced energy epsilon scales the actual ion energy E relative to the characteristic electrostatic interaction energy between the projectile and target nuclei — it accounts for the atomic numbers z1 and z2 and masses M1 and M2 of the projectile and target respectively. At low epsilon (low ion energy or heavy target), nuclear stopping dominates and Sn* is large. At high epsilon the ion moves too fast for efficient nuclear energy transfer and Sn* decreases. For typical magnetron sputtering conditions (Ar+ at 200-800 eV on metals), epsilon falls in the range 2-10 where Sn* is significant but below its peak value.</p>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">Sn*(epsilon)</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">[3.441 · sqrt(epsilon) · ln(epsilon + e)] / [1 + 6.355 · sqrt(epsilon) + epsilon · (6.882 · sqrt(epsilon) - 1.708)]</span>
+        </div>
+      </div>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">epsilon</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">32.53 · gamma · E / [z1 · z2 · (z1^0.23 + z2^0.23)]</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">gamma</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">4 · M1 · M2 / (M1 + M2)^2</span>
+        </div>
+      </div>
+
+      <ul class="definitions">
+        <li>epsilon = dimensionless reduced energy</li>
+        <li>gamma = kinematic energy transfer factor</li>
+        <li>z1 = 18 (Ar projectile atomic number)</li>
+        <li>z2 = target atomic number</li>
+        <li>M1 = 39.95 amu (Ar mass)</li>
+        <li>M2 = target atomic mass (amu)</li>
+        <li>e = Euler's number (2.718)</li>
+      </ul>
+
+      <div class="diagram-wrap" aria-label="LSS nuclear stopping curve diagram">
+        <svg width="400" height="220" viewBox="0 0 400 220" role="img">
+          <rect x="0" y="0" width="400" height="220" fill="#F0F4F8"></rect>
+          <rect x="248" y="34" width="49" height="144" fill="rgba(77,183,255,0.16)"></rect>
+          <line x1="54" y1="178" x2="360" y2="178" stroke="#4A5568" stroke-width="1"></line>
+          <line x1="54" y1="178" x2="54" y2="28" stroke="#4A5568" stroke-width="1"></line>
+          <g fill="#4A5568" font-size="9">
+            <text x="44" y="195">0.01</text>
+            <text x="118" y="195">0.1</text>
+            <text x="198" y="195">1</text>
+            <text x="273" y="195">10</text>
+            <text x="344" y="195">100</text>
+            <text x="28" y="181">0</text>
+            <text x="22" y="151">0.1</text>
+            <text x="22" y="120">0.2</text>
+            <text x="22" y="89">0.3</text>
+            <text x="22" y="58">0.4</text>
+            <text x="22" y="32">0.5</text>
+            <text x="154" y="213">Reduced energy epsilon</text>
+          </g>
+          <text x="-129" y="16" transform="rotate(-90)" fill="#4A5568" font-size="9">Sn*(epsilon)</text>
+          <path d="M54 174 C72 160, 89 118, 100 78 C111 43, 128 35, 143 50 C166 74, 187 94, 216 112 C256 137, 310 151, 360 160" fill="none" stroke="#4DB7FF" stroke-width="3"></path>
+          <text x="226" y="48" fill="#4DB7FF" font-size="8">Typical</text>
+          <text x="224" y="60" fill="#4DB7FF" font-size="8">magnetron range</text>
+          <text x="256" y="72" fill="#4DB7FF" font-size="8">epsilon=2-10</text>
+        </svg>
+      </div>
+
+      <div class="callout"><strong>What you see in the simulator:</strong> The LSS function is evaluated every frame for each active gun. The YIELD readout reflects both Sn*(epsilon) and the material Q value. Heavy materials like W and Ta have large z2 values which increase the denominator of epsilon, shifting the operating point on the LSS curve.</div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num">3.</span>
+        <h2 id="emission">Angular Emission and Energy Spectrum</h2>
+      </div>
+
+      <p>Sputtered atoms do not leave the target 
+      uniformly in all directions. Their angular 
+      distribution follows a cosine-power law — 
+      most atoms leave near-normal to the surface, 
+      with fewer emitted at oblique angles. The 
+      exponent n controls how forward-peaked the 
+      distribution is. At low ion energies near 
+      threshold, n approaches 1 (pure cosine, 
+      Knudsen cosine law). At higher ion energies, 
+      n increases above 1 producing an overcosine 
+      distribution that is more concentrated 
+      around the surface normal. Higher pressure 
+      reduces n through gas-phase thermalisation. 
+      This angular distribution directly determines 
+      the shape of the deposition profile on the 
+      substrate — a forward-peaked distribution 
+      at low pressure produces a centre-peaked 
+      film, while a more diffuse distribution at 
+      high pressure produces a broader, more 
+      uniform film.</p>
+
+      <p>Each sputtered atom is also assigned an 
+      initial kinetic energy sampled from the 
+      Thompson-Sigmund distribution, which peaks 
+      at half the surface binding energy (Es = 
+      U0/2) and falls off as Es^-2 at high 
+      energies. This energy governs how far the 
+      atom can penetrate the background gas before 
+      being thermalised.</p>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">f(theta)</span>
+          <span class="eq-eq">∝</span>
+          <span class="eq-rhs">cos^n(theta)</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">n</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">2.15 + 1.45 * (Eion/500) - fP - fRF - fgeom</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">n</span>
+          <span class="eq-eq">∈</span>
+          <span class="eq-rhs">[0.55, 4.6]</span>
+        </div>
+        <div class="eq-row eq-section">
+          <span class="eq-lhs">f(Es)</span>
+          <span class="eq-eq">∝</span>
+          <span class="eq-rhs">Es / (Es + U0)^3 * [1 - sqrt((Es + U0) / Emax)]</span>
+        </div>
+      </div>
+
+      <ul class="definitions">
+        <li>theta = polar emission angle from 
+        surface normal</li>
+        <li>n = cosine exponent — controls 
+        distribution shape (n=1: uniform cosine, 
+        n>1: forward-peaked)</li>
+        <li>Eion = ion energy (eV)</li>
+        <li>fP = pressure broadening correction</li>
+        <li>fRF = RF mode spread correction</li>
+        <li>fgeom = geometric correction factor</li>
+        <li>Es = kinetic energy of sputtered atom</li>
+        <li>U0 = surface binding energy (eV)</li>
+        <li>Emax = maximum transferable energy = 
+        gamma * Eion - U0</li>
+      </ul>
+
+      <div class="diagram-wrap" 
+      aria-label="Cosine emission distribution diagram">
+        <svg width="400" height="220" 
+        viewBox="0 0 400 220" role="img">
+          <rect width="400" height="220" 
+          fill="#F0F4F8"/>
+          <!-- Target surface line -->
+          <line x1="40" y1="190" x2="360" y2="190" 
+          stroke="#4A5568" stroke-width="1.5"/>
+          <text x="160" y="210" fill="#4A5568" 
+          font-size="9">Target Surface</text>
+          <!-- n=1 cosine (widest) -->
+          <path d="M200,190 
+            C180,155 155,130 140,110 
+            C125,90 120,80 120,75 
+            C120,80 115,90 110,110 
+            C95,130 75,155 60,190" 
+          fill="rgba(100,180,255,0.12)" 
+          stroke="#4DB7FF" stroke-width="1.5"
+          stroke-dasharray="5,3"/>
+          <text x="55" y="72" fill="#4DB7FF" 
+          font-size="8">n=1 (cosine)</text>
+          <!-- n=2 moderate -->
+          <path d="M200,190 
+            C185,160 168,138 158,118 
+            C148,100 145,88 145,82 
+            C145,88 142,100 135,118 
+            C122,138 108,160 95,190" 
+          fill="rgba(255,200,80,0.10)" 
+          stroke="#C9A84C" stroke-width="1.5"
+          stroke-dasharray="3,2"/>
+          <text x="90" y="98" fill="#C9A84C" 
+          font-size="8">n=2</text>
+          <!-- n=4 forward-peaked (narrowest) -->
+          <path d="M200,190 
+            C192,165 178,145 170,128 
+            C162,112 160,100 160,95 
+            C160,100 157,112 150,128 
+            C142,145 128,165 120,190" 
+          fill="rgba(100,255,180,0.10)" 
+          stroke="#48BB78" stroke-width="2"/>
+          <text x="115" y="112" fill="#48BB78" 
+          font-size="8">n=4 (forward-peaked)</text>
+          <!-- Normal direction arrow -->
+          <line x1="200" y1="190" x2="200" y2="40" 
+          stroke="#555" stroke-width="1" 
+          stroke-dasharray="4,3"/>
+          <text x="204" y="50" fill="#666" 
+          font-size="8">Normal</text>
+        </svg>
+      </div>
+
+      <div class="callout">
+        <strong>What you see in the simulator:</strong>
+        Reduce pressure to 1 mTorr and observe the 
+        narrow centre-peaked deposition profile on 
+        the substrate — this is the forward-peaked 
+        cosine distribution at low n. Increase 
+        pressure to 15 mTorr and watch the profile 
+        broaden as gas-phase scattering randomises 
+        the atom directions.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num">4.</span>
+        <h2 id="transport">Gas-Phase Transport</h2>
+      </div>
+
+      <p>After leaving the target, sputtered atoms 
+      must traverse the Ar working gas to reach the 
+      substrate. The mean free path lambda is the 
+      average distance an atom travels before 
+      colliding with a gas molecule. It is derived 
+      from kinetic gas theory and is inversely 
+      proportional to pressure — at low pressure 
+      the gas is sparse and lambda is large 
+      (ballistic transport), while at high pressure 
+      lambda is small and atoms scatter frequently 
+      (diffusive transport).</p>
+
+      <p>The scattering ratio chi = d/lambda is the 
+      key dimensionless parameter. When chi is much 
+      less than 1, atoms travel in nearly straight 
+      lines from target to substrate — the flux is 
+      highly directional and produces a 
+      centre-peaked deposition profile. When chi 
+      exceeds 2, the flux is strongly scattered and 
+      arrives at the substrate from many directions 
+      — producing a broader, more uniform profile 
+      but at a lower deposition rate due to flux 
+      attenuation.</p>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">lambda</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">kB * T / (sqrt(2) * pi * d_mix^2 * P)</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">chi</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">d / lambda <span class="eq-note">(scattering ratio)</span></span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">Tf</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">exp(-d / lambda) <span class="eq-note">(transport factor)</span></span>
+        </div>
+        <div class="eq-section">Regime classification:</div>
+        <div class="eq-table">
+          <span>chi &lt; 1</span><span>Ballistic</span>
+          <span>1 &lt;= chi &lt; 2</span><span>Moderate scattering</span>
+          <span>chi &gt;= 2</span><span>Diffusive</span>
+        </div>
+      </div>
+
+      <ul class="definitions">
+        <li>lambda = mean free path (m)</li>
+        <li>kB = 1.38e-23 J/K 
+        (Boltzmann constant)</li>
+        <li>T = gas temperature (300 K)</li>
+        <li>d_mix = effective molecular diameter 
+        of Ar/O2 mixture (m)</li>
+        <li>P = chamber pressure (Pa)</li>
+        <li>chi = scattering ratio 
+        (dimensionless)</li>
+        <li>d = target-substrate distance (m)</li>
+        <li>Tf = transport attenuation factor — 
+        fraction of flux reaching the substrate</li>
+      </ul>
+
+      <div class="diagram-wrap" 
+      aria-label="Transport regime diagram">
+        <svg width="400" height="200" 
+        viewBox="0 0 400 200" role="img">
+          <rect width="400" height="200" 
+          fill="#F0F4F8"/>
+          <!-- Labels -->
+          <text x="55" y="18" fill="#4DB7FF" 
+          font-size="10" font-weight="bold">
+          Ballistic (chi&lt;1)</text>
+          <text x="170" y="18" fill="#C9A84C" 
+          font-size="10" font-weight="bold">
+          Moderate</text>
+          <text x="295" y="18" fill="#F56565" 
+          font-size="10" font-weight="bold">
+          Diffusive</text>
+          <!-- Target bars -->
+          <rect x="20" y="28" width="80" 
+          height="8" fill="#4DB7FF" rx="2"/>
+          <rect x="150" y="28" width="80" 
+          height="8" fill="#C9A84C" rx="2"/>
+          <rect x="285" y="28" width="80" 
+          height="8" fill="#F56565" rx="2"/>
+          <!-- Substrate bars -->
+          <rect x="20" y="162" width="80" 
+          height="8" fill="#4DB7FF" rx="2"/>
+          <rect x="150" y="162" width="80" 
+          height="8" fill="#C9A84C" rx="2"/>
+          <rect x="285" y="162" width="80" 
+          height="8" fill="#F56565" rx="2"/>
+          <!-- Ballistic: straight arrows -->
+          <line x1="50" y1="36" x2="42" y2="162" 
+          stroke="#4DB7FF" stroke-width="1.5"/>
+          <line x1="60" y1="36" x2="60" y2="162" 
+          stroke="#4DB7FF" stroke-width="1.5"/>
+          <line x1="70" y1="36" x2="78" y2="162" 
+          stroke="#4DB7FF" stroke-width="1.5"/>
+          <!-- Moderate: slight kinks -->
+          <path d="M175,36 C170,80 165,100 172,162" 
+          fill="none" stroke="#C9A84C" 
+          stroke-width="1.5"/>
+          <path d="M190,36 C195,80 195,110 190,162" 
+          fill="none" stroke="#C9A84C" 
+          stroke-width="1.5"/>
+          <path d="M210,36 C215,80 220,100 208,162" 
+          fill="none" stroke="#C9A84C" 
+          stroke-width="1.5"/>
+          <!-- Diffusive: random walks -->
+          <path d="M310,36 C325,60 295,85 
+          315,105 C330,120 300,140 320,162" 
+          fill="none" stroke="#F56565" 
+          stroke-width="1.5"/>
+          <path d="M325,36 C310,55 340,80 
+          320,100 C305,115 325,138 315,162" 
+          fill="none" stroke="#F56565" 
+          stroke-width="1.5"/>
+          <path d="M340,36 C355,65 325,88 
+          345,108 C360,125 335,145 340,162" 
+          fill="none" stroke="#F56565" 
+          stroke-width="1.5"/>
+          <!-- Target/Substrate labels -->
+          <text x="25" y="24" fill="#888" 
+          font-size="7">Target</text>
+          <text x="155" y="24" fill="#888" 
+          font-size="7">Target</text>
+          <text x="290" y="24" fill="#888" 
+          font-size="7">Target</text>
+          <text x="22" y="183" fill="#888" 
+          font-size="7">Substrate</text>
+          <text x="152" y="183" fill="#888" 
+          font-size="7">Substrate</text>
+          <text x="287" y="183" fill="#888" 
+          font-size="7">Substrate</text>
+        </svg>
+      </div>
+
+      <div class="callout">
+        <strong>What you see in the simulator:</strong>
+        The TRANSPORT RATIO and TRANSPORT REGIME 
+        readouts in the Process Diagnostics panel 
+        show chi and the regime classification in 
+        real time. The Mean Free Path (lambda) 
+        value is displayed in the top status bar. 
+        Run Lab Module 1 to systematically explore 
+        how pressure controls the transition between 
+        ballistic and diffusive transport.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num">5.</span>
+        <h2 id="discharge">Discharge Model</h2>
+      </div>
+
+      <p>The simulator represents the magnetron 
+      plasma discharge through a reduced-order 
+      parametric model. The applied target power P 
+      and cathode voltage V determine the discharge 
+      current I and the effective ion energy at the 
+      target surface. In a real magnetron system, 
+      the ion energy is governed by the cathode 
+      sheath voltage, which depends on the plasma 
+      density, magnetic field geometry, and gas 
+      pressure. The simulator captures the dominant 
+      trends without resolving the full plasma 
+      kinetics.</p>
+
+      <p>In DC mode, the full cathode voltage 
+      accelerates ions across the sheath. In RF 
+      mode, an alternating voltage creates a 
+      self-bias DC offset that is approximately 
+      60% of the equivalent DC voltage — giving 
+      lower effective ion energy and therefore 
+      lower sputtering yield at the same nominal 
+      power. The magnetic field enhancement factor 
+      fB reflects the increased ionisation 
+      efficiency of the E×B electron drift 
+      trajectory in the magnetron configuration.</p>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">I</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">P / V <span class="eq-note">(discharge current from applied power)</span></span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">Eion</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">V * ftype * fB <span class="eq-note">(effective ion energy at target)</span></span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">DC mode</span>
+          <span class="eq-eq">:</span>
+          <span class="eq-rhs">ftype = 1.06</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">RF mode</span>
+          <span class="eq-eq">:</span>
+          <span class="eq-rhs">ftype = 0.60 <span class="eq-note">(self-bias reduction)</span></span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">fB</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">0.85 + (B / Bref) * 0.25</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">Bref</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">0.12 T</span>
+        </div>
+      </div>
+
+      <ul class="definitions">
+        <li>I = discharge current (A)</li>
+        <li>P = applied target power (W)</li>
+        <li>V = cathode voltage (V)</li>
+        <li>Eion = effective ion energy (eV)</li>
+        <li>ftype = DC/RF mode correction factor</li>
+        <li>fB = magnetic confinement 
+        enhancement factor</li>
+        <li>B = magnetic field strength (T)</li>
+        <li>Bref = 0.12 T reference field</li>
+      </ul>
+
+      <div class="diagram-wrap" 
+      aria-label="DC versus RF voltage diagram">
+        <svg width="400" height="200" 
+        viewBox="0 0 400 200" role="img">
+          <rect width="400" height="200" 
+          fill="#F0F4F8"/>
+          <!-- DC panel -->
+          <text x="60" y="20" fill="#4DB7FF" 
+          font-size="10" 
+          font-weight="bold">DC Mode</text>
+          <line x1="20" y1="100" x2="160" y2="100" 
+          stroke="#555" stroke-width="1"/>
+          <line x1="20" y1="140" x2="160" y2="140" 
+          stroke="#555" stroke-width="1" 
+          stroke-dasharray="3,3"/>
+          <path d="M20,140 L20,50 L160,50 L160,140" 
+          fill="rgba(77,183,255,0.12)" 
+          stroke="#4DB7FF" stroke-width="2"/>
+          <text x="70" y="75" fill="#4DB7FF" 
+          font-size="9">Vdc (full)</text>
+          <text x="55" y="155" fill="#888" 
+          font-size="8">Constant sheath voltage</text>
+          <!-- RF panel -->
+          <text x="250" y="20" fill="#C9A84C" 
+          font-size="10" 
+          font-weight="bold">RF Mode</text>
+          <line x1="200" y1="100" x2="380" y2="100" 
+          stroke="#555" stroke-width="1"/>
+          <!-- RF waveform -->
+          <path d="M200,100 C210,60 220,40 230,60 
+          C240,80 250,120 260,140 C270,120 280,60 
+          290,40 C300,60 310,120 320,140 
+          C330,120 340,60 350,40 C360,60 
+          370,100 380,100" 
+          fill="none" stroke="#C9A84C" 
+          stroke-width="1.5"/>
+          <!-- Self-bias line -->
+          <line x1="200" y1="115" x2="380" y2="115" 
+          stroke="#F56565" stroke-width="1.5" 
+          stroke-dasharray="4,3"/>
+          <text x="285" y="112" fill="#F56565" 
+          font-size="8">Self-bias</text>
+          <text x="290" y="124" fill="#F56565" 
+          font-size="8">(~60% of DC)</text>
+          <text x="205" y="155" fill="#888" 
+          font-size="8">Lower effective ion energy</text>
+        </svg>
+      </div>
+
+      <div class="callout">
+        <strong>What you see in the simulator:</strong>
+        Switch a gun between DC and RF mode at the 
+        same power setting. The YIELD readout will 
+        drop by approximately 30% in RF mode due 
+        to the lower effective ion energy. The 
+        deposition rate drops by approximately 50% 
+        because both the yield and the ion flux 
+        are reduced. This DC vs RF difference is 
+        particularly important when choosing 
+        operating mode for reactive sputtering 
+        of oxides and nitrides.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num">6.</span>
+        <h2 id="uniformity">Film Uniformity</h2>
+      </div>
+
+      <p>Film thickness uniformity is one of the 
+      most practically important metrics in 
+      magnetron sputtering. Non-uniform films 
+      produce variation in electrical resistance, 
+      optical properties, and mechanical stress 
+      across the substrate — which directly affects 
+      device yield in semiconductor manufacturing. 
+      The non-uniformity metric NU% quantifies the 
+      peak-to-peak thickness variation normalised 
+      to the mean thickness. A NU% of zero 
+      represents a perfectly uniform film; typical 
+      production targets are NU% below 3-5%.</p>
+
+      <p>In Sputter<span style="color:#5AD8BE;">One</span>, NU% is computed from the 
+      binned substrate thickness profile in real 
+      time. The deposition profile is shaped by 
+      the combination of the cosine emission 
+      distribution from the target, the Gaussian 
+      spreading kernel, and the pressure-dependent 
+      gas-phase scattering. Optimising uniformity 
+      requires balancing these factors through 
+      target-substrate geometry and pressure 
+      selection — which is the subject of Lab 
+      Module 3.</p>
+
+      <div class="equation">
+        <div class="eq-row">
+          <span class="eq-lhs">NU%</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">(t_max - t_min) / t_avg * 100</span>
+        </div>
+        <div class="eq-row">
+          <span class="eq-lhs">U%</span>
+          <span class="eq-eq">=</span>
+          <span class="eq-rhs">100 - NU% <span class="eq-note">(uniformity percentage)</span></span>
+        </div>
+        <div class="eq-section">where:</div>
+        <div class="eq-table">
+          <span>t_max</span><span>maximum bin thickness across substrate</span>
+          <span>t_min</span><span>minimum bin thickness across substrate</span>
+          <span>t_avg</span><span>mean bin thickness across substrate</span>
+        </div>
+      </div>
+
+      <ul class="definitions">
+        <li>NU% = non-uniformity percentage</li>
+        <li>U% = uniformity percentage 
+        (complement of NU%)</li>
+        <li>t_max = maximum film thickness 
+        at any point on substrate</li>
+        <li>t_min = minimum film thickness 
+        at any point on substrate</li>
+        <li>t_avg = mean film thickness 
+        across substrate</li>
+        <li>Lower NU% = more uniform film</li>
+      </ul>
+
+      <div class="diagram-wrap" 
+      aria-label="Film uniformity diagram">
+        <svg width="400" height="200" 
+        viewBox="0 0 400 200" role="img">
+          <rect width="400" height="200" 
+          fill="#F0F4F8"/>
+          <!-- Good uniformity panel -->
+          <text x="30" y="18" fill="#48BB78" 
+          font-size="10" font-weight="bold">
+          Low NU% (uniform)</text>
+          <!-- Substrate -->
+          <rect x="20" y="155" width="150" 
+          height="6" fill="#445566" rx="1"/>
+          <!-- Uniform film -->
+          <rect x="20" y="130" width="150" 
+          height="24" fill="rgba(126,216,160,0.3)" 
+          stroke="#48BB78" stroke-width="1.5" 
+          rx="1"/>
+          <text x="68" y="144" fill="#48BB78" 
+          font-size="8">t_max ≈ t_min</text>
+          <!-- Annotations -->
+          <line x1="175" y1="130" x2="190" y2="130" 
+          stroke="#48BB78" stroke-width="1"/>
+          <line x1="175" y1="154" x2="190" y2="154" 
+          stroke="#48BB78" stroke-width="1"/>
+          <line x1="183" y1="130" x2="183" y2="154" 
+          stroke="#48BB78" stroke-width="1"/>
+          <text x="192" y="145" fill="#48BB78" 
+          font-size="8">small</text>
+          <!-- Poor uniformity panel -->
+          <text x="230" y="18" fill="#F56565" 
+          font-size="10" font-weight="bold">
+          High NU% (non-uniform)</text>
+          <!-- Substrate -->
+          <rect x="225" y="155" width="150" 
+          height="6" fill="#445566" rx="1"/>
+          <!-- Centre-peaked film -->
+          <path d="M225,154 C240,154 255,120 
+          300,100 C345,120 360,154 375,154" 
+          fill="rgba(224,85,85,0.25)" 
+          stroke="#F56565" stroke-width="1.5"/>
+          <!-- tmax arrow -->
+          <line x1="300" y1="100" x2="300" y2="154" 
+          stroke="#F56565" stroke-width="1" 
+          stroke-dasharray="3,2"/>
+          <text x="304" y="125" fill="#F56565" 
+          font-size="8">t_max</text>
+          <!-- tmin arrow -->
+          <line x1="235" y1="154" x2="235" y2="148" 
+          stroke="#F56565" stroke-width="1"/>
+          <text x="206" y="148" fill="#F56565" 
+          font-size="8">t_min</text>
+        </svg>
+      </div>
+
+      <div class="callout">
+        <strong>What you see in the simulator:</strong>
+        The NU% and UNIFORMITY readouts update in 
+        real time in the Process Diagnostics panel. 
+        The Radial Thickness Profile chart (PR-303) 
+        shows the bin-by-bin thickness distribution 
+        visually. Run Lab Module 3 to systematically 
+        optimise geometry for best uniformity — 
+        the reveal-on-demand panel shows the 
+        expected optimal conditions once you have 
+        made your own observations.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <span class="section-num"></span>
+        <h2 id="materials">Material Parameters</h2>
+      </div>
+
+      <p>The following table lists the 
+      Yamamura-Bohdansky parameters for all eight 
+      target materials in the Sputter<span style="color:#5AD8BE;">One</span> database. 
+      These values are sourced from Yamamura and 
+      Tawara (1996) and cross-referenced against 
+      the SRIM database. Y(500 eV) is the computed 
+      sputtering yield for Ar+ bombardment at 
+      500 eV normal incidence.</p>
+
+      <div style="overflow-x:auto; 
+      margin: 28px 0;">
+        <table style="width:100%; 
+        border-collapse:collapse; 
+        font-family: var(--mono); 
+        font-size:13px;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <th style="text-align:left; 
+              padding:10px 14px; 
+              color:#0B7DC1;">Material</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">Symbol</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">M₂ (amu)</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">Z₂</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">U₀ (eV)</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">Eth (eV)</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">Q</th>
+              <th style="padding:10px 14px; 
+              color:#0B7DC1;">Y(500 eV)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Copper</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Cu</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">63.5</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">29</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">3.49</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">24</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.115</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~2.1</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Aluminium</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Al</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">27.0</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">13</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">3.39</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">21</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.150</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~0.9</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Titanium</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Ti</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">47.9</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">22</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">4.89</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">28</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.092</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~0.5</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Zinc</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Zn</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">65.4</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">30</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">1.35</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">14</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.208</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~3.6</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Tin</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Sn</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">118.7</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">50</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">3.12</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">20</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.112</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~1.8</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Tungsten</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">W</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">183.8</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">74</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">8.83</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">38</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.046</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~0.4</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.08);">
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Tantalum</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Ta</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">180.9</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">73</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">8.10</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">36</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.050</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~0.3</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 14px; 
+              color:#1A2332;">Molybdenum</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">Mo</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">95.9</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">42</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">6.83</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">31</td>
+              <td style="padding:9px 14px; 
+              text-align:center;">0.074</td>
+              <td style="padding:9px 14px; 
+              text-align:center; 
+              color:#1A2332;">~0.6</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="color:var(--muted); 
+      font-size:13px; margin-top:8px;">
+        Source: Yamamura Y and Tawara H (1996) 
+        Atomic Data and Nuclear Data Tables 
+        62(2) 149-253. Cross-referenced against 
+        SRIM/TRIM (Ziegler et al. 2010).
+      </p>
+
+      <div class="callout">
+        <strong>Using this table:</strong>
+        Materials with low U₀ (Zn at 1.35 eV) 
+        have high sputtering yield and fast 
+        deposition. Materials with high U₀ 
+        (W at 8.83 eV, Ta at 8.10 eV) have low 
+        yield and slow deposition. In co-sputtering, 
+        equal power on Zn and W guns will produce 
+        a Zn-dominated film because Zn sputters 
+        approximately 9x faster than W at the 
+        same ion energy.
+      </div>
+
+      <div style="height: 60px;"></div>
+    </section>
+  </main>
+  </div>
+
+  <script>
+    const sections = document.querySelectorAll(
+      '[id]');
+    const navLinks = document.querySelectorAll(
+      '.physics-sidebar a');
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            navLinks.forEach(link => {
+              link.classList.remove('active');
+              if (link.getAttribute('href') ===
+                '#' + entry.target.id) {
+                link.classList.add('active');
+              }
+            });
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    sections.forEach(section =>
+      observer.observe(section));
+
+    const mobileNav = document.querySelector('.physics-mobile-nav');
+    if (mobileNav) {
+      mobileNav.addEventListener('change', (event) => {
+        const target = document.querySelector(event.target.value);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial - Sputtering Simulator | Dr. Balaji Gururajan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  
+
+  <style>
+    html {
+      color-scheme: light;
+      scrollbar-color: #9CCFEA #EEF6FB;
+      scrollbar-width: thin;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    :root {
+      --black: #FAFAFA;
+      --deep: #FFFFFF;
+      --panel: #FFFFFF;
+      --border: rgba(0, 0, 0, 0.06);
+      --bhi: rgba(0, 0, 0, 0.05);
+      --gold: #0B7DC1;
+      --gold-l: #3A9FD4;
+      --gold-d: #085A8F;
+      --brand-mint: #5AD8BE;
+      --cyan: #0B7DC1;
+      --amber: #B7860B;
+      --white: #1A2332;
+      --g1: #1A2332;
+      --g2: #4A5568;
+      --g3: #718096;
+      --success: #48BB78;
+      --warning: #ED8936;
+      --error: #F56565;
+      --page-pad: 52px;
+      --body-size: 15px;
+      --label-size: 11px;
+      --sans: 'Barlow', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --cond: 'Barlow Condensed', 'Arial Narrow', 'Bahnschrift SemiCondensed', sans-serif;
+      --mono: 'Barlow', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--sans);
+      font-size: var(--body-size);
+      line-height: 1.75;
+      font-weight: 400;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    *::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: #EEF6FB;
+      border-radius: 999px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #BFE3F4, #7DBDDC);
+      border: 2px solid #EEF6FB;
+      border-radius: 999px;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #A9D8EF, #5FAED5);
+    }
+
+    #nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--page-pad);
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13, 17, 23, 0.97);
+      backdrop-filter: blur(12px);
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: var(--label-size);
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #E0E0E0;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover {
+      color: #4DB7FF;
+    }
+
+    .nav-title,
+    .nav-meta {
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      letter-spacing: 1.5px !important;
+    }
+
+    .nav-back svg {
+      transition: transform 0.2s;
+    }
+
+    .nav-back:hover svg {
+      transform: translateX(-3px);
+    }
+
+    .nav-center {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #E0E0E0;
+    }
+
+    .nav-right {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      color: #E0E0E0;
+    }
+
+    #progress-bar {
+      height: 2px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-d), var(--gold));
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #main {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #sidebar {
+      border-right: 1px solid rgba(0,0,0,0.08);
+      background: #F0F4F8;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sb-header {
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #4A5568;
+      flex-shrink: 0;
+    }
+
+    .chapter-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      transition: background 0.18s;
+      position: relative;
+    }
+
+    .chapter-item:hover {
+      background: rgba(11, 125, 193, 0.06);
+    }
+
+    .chapter-item.active {
+      background: rgba(11, 125, 193, 0.06);
+      border-left: 3px solid #0B7DC1;
+    }
+
+    .chapter-item.done .ch-check {
+      opacity: 1;
+    }
+
+    .ch-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--g3);
+      margin-top: 1px;
+      flex-shrink: 0;
+      width: 18px;
+      transition: color 0.2s;
+    }
+
+    .chapter-item.active .ch-num {
+      color: #0B7DC1;
+    }
+
+    .ch-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ch-title {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--g1);
+      line-height: 1.3;
+      transition: color 0.2s;
+    }
+
+    .chapter-item.active .ch-title {
+      color: #0B7DC1;
+    }
+
+    .chapter-item.done .ch-title {
+      color: var(--g1);
+    }
+
+    .ch-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      color: var(--g3);
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    .ch-check {
+      font-size: 10px;
+      color: var(--gold-d);
+      opacity: 0;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .sb-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      color: var(--g3);
+      flex-shrink: 0;
+    }
+
+    .sb-progress-text {
+      color: var(--gold-d);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    #content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--black);
+    }
+
+    #slide-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(500px, 38vw);
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: all;
+    }
+
+    .slide.exit {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    .sl-text {
+      padding: 40px 44px 32px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+
+    .sl-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .sl-chapter {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #0B7DC1;
+    }
+
+    .sl-sep {
+      color: var(--g3);
+      font-size: 13px;
+    }
+
+    .sl-page {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      color: var(--g1);
+    }
+
+    .sl-title {
+      font-family: var(--cond);
+      font-size: 48px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      line-height: 1.0;
+      color: #1A2332;
+      margin-bottom: 6px;
+    }
+
+    .sl-title span {
+      color: var(--gold);
+      display: block;
+    }
+
+    .sl-rule {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold-d), transparent);
+      margin: 18px 0;
+    }
+
+    .sl-body {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.75;
+      color: #1A2332;
+      margin-bottom: 24px;
+    }
+
+    .sl-body strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    .sl-body em {
+      color: var(--gold-l);
+      font-style: normal;
+    }
+
+    .panel {
+      background: #FFFFFF;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08),
+                  0 0 0 1px rgba(0,0,0,0.03);
+    }
+
+    .ref-callout {
+      border-left: 4px solid #0B7DC1;
+      padding: 18px 20px;
+      margin-top: 20px;
+      background: #EBF8FF;
+      color: #1A2332;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08),
+                  0 0 0 1px rgba(0,0,0,0.03);
+    }
+
+    .ref-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    .ref-body {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--g1);
+      line-height: 1.75;
+    }
+
+    .ref-cite {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--g3);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    .key-box {
+      border: 1px solid rgba(0,0,0,0.08);
+      border-left: 2px solid #085A8F;
+      background: #FFFFFF;
+      padding: 14px 18px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08),
+                  0 0 0 1px rgba(0,0,0,0.03);
+      margin-bottom: 20px;
+    }
+
+    .key-box-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold-d);
+      margin-bottom: 8px;
+    }
+
+    .key-box-text {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--gold-l);
+      line-height: 1.9;
+      letter-spacing: 0.3px;
+    }
+
+    .fact-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .fact-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--g1);
+    }
+
+    .fact-list li::before {
+      content: '-';
+      color: var(--gold-d);
+      font-family: var(--mono);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .sl-diagram {
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(11, 125, 193, 0.16);
+      border-left: 2px solid rgba(11, 125, 193, 0.34);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(11, 125, 193, 0.08),
+                  0 0 0 1px rgba(0,0,0,0.03);
+    }
+
+    .sl-diagram-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--white);
+      flex-shrink: 0;
+      background: #FFFFFF;
+    }
+
+    .sl-diagram-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+      background: #FFFFFF;
+      position: relative;
+    }
+
+    .sl-diagram-body::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 1px solid rgba(11, 125, 193, 0.10);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .sl-diagram-body svg {
+      width: 100%;
+      max-width: 560px;
+      height: auto;
+      display: block;
+      filter: saturate(1.03) brightness(1.02) drop-shadow(0 2px 8px rgba(11,125,193,0.10));
+      shape-rendering: geometricPrecision;
+      text-rendering: geometricPrecision;
+    }
+
+    .sl-diagram-body svg text {
+      paint-order: stroke;
+      fill: #1A2332 !important;
+      stroke: rgba(255, 255, 255, 0.72);
+      stroke-width: 0.9px;
+      font-family: var(--mono) !important;
+      font-size: 8px !important;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .sl-diagram-body svg [fill="#d9b25a"],
+    .sl-diagram-body svg [fill="#d4a820"],
+    .sl-diagram-body svg [fill="#c08030"],
+    .sl-diagram-body svg [fill="#a07818"] {
+      fill: var(--gold) !important;
+    }
+
+    .sl-diagram-body svg [stroke="#d4a820"],
+    .sl-diagram-body svg [stroke="#c08030"] {
+      stroke: var(--gold-d) !important;
+    }
+
+    .sl-diagram-body svg [fill="#60a0c0"],
+    .sl-diagram-body svg [fill="#40c0f0"],
+    .sl-diagram-body svg [fill="#3090d0"] {
+      fill: var(--cyan) !important;
+    }
+
+    .sl-diagram-body svg [stroke="#60a0c0"],
+    .sl-diagram-body svg [stroke="#40c0f0"],
+    .sl-diagram-body svg [stroke="#3090d0"] {
+      stroke: var(--cyan) !important;
+    }
+
+    .sl-diagram-body svg [fill="#d0d6df"],
+    .sl-diagram-body svg [fill="#aab3c0"] {
+      fill: var(--white) !important;
+    }
+
+    .sl-diagram-body svg [fill="#667081"],
+    .sl-diagram-body svg [fill="#506070"],
+    .sl-diagram-body svg [fill="#506080"],
+    .sl-diagram-body svg [fill="#405060"],
+    .sl-diagram-body svg [fill="#405070"],
+    .sl-diagram-body svg [fill="#405870"],
+    .sl-diagram-body svg [fill="#405868"],
+    .sl-diagram-body svg [fill="#406070"],
+    .sl-diagram-body svg [fill="#406050"],
+    .sl-diagram-body svg [fill="#404858"],
+    .sl-diagram-body svg [fill="#304050"] {
+      fill: var(--g2) !important;
+    }
+
+    .sl-diagram-body svg [fill="#303848"],
+    .sl-diagram-body svg [fill="#252e3a"] {
+      fill: var(--white) !important;
+    }
+
+    .sl-diagram-body svg [stroke="#303848"],
+    .sl-diagram-body svg [stroke="#505868"],
+    .sl-diagram-body svg [stroke="#304050"],
+    .sl-diagram-body svg [stroke="#283040"],
+    .sl-diagram-body svg [stroke="#203040"],
+    .sl-diagram-body svg [stroke="#202838"],
+    .sl-diagram-body svg [stroke="#202030"],
+    .sl-diagram-body svg [stroke="#252e40"],
+    .sl-diagram-body svg [stroke="#304060"],
+    .sl-diagram-body svg [stroke="#303840"],
+    .sl-diagram-body svg [stroke="#303040"],
+    .sl-diagram-body svg [stroke="#302848"],
+    .sl-diagram-body svg [stroke="#404858"],
+    .sl-diagram-body svg [stroke="#404870"],
+    .sl-diagram-body svg [stroke="#405070"],
+    .sl-diagram-body svg [stroke="#4a6080"],
+    .sl-diagram-body svg [stroke="#3a5070"],
+    .sl-diagram-body svg [stroke="#4a5878"],
+    .sl-diagram-body svg [stroke="#4a3878"],
+    .sl-diagram-body svg [stroke="#5a3050"] {
+      stroke: rgba(150, 165, 184, 0.58) !important;
+    }
+
+    .sl-diagram-body svg [fill="#0a1520"],
+    .sl-diagram-body svg [fill="#0a0e18"],
+    .sl-diagram-body svg [fill="#0e1420"],
+    .sl-diagram-body svg [fill="#1a2030"],
+    .sl-diagram-body svg [fill="#141828"],
+    .sl-diagram-body svg [fill="#10141e"],
+    .sl-diagram-body svg [fill="#0a1828"],
+    .sl-diagram-body svg [fill="#0c1020"],
+    .sl-diagram-body svg [fill="#0d1018"],
+    .sl-diagram-body svg [fill="#0d1220"],
+    .sl-diagram-body svg [fill="#0f1928"],
+    .sl-diagram-body svg [fill="#1a1020"],
+    .sl-diagram-body svg [fill="#1a2535"],
+    .sl-diagram-body svg [fill="#151e30"],
+    .sl-diagram-body svg [fill="#1a1520"],
+    .sl-diagram-body svg [fill="#2a304a"],
+    .sl-diagram-body svg [fill="#2a2050"] {
+      fill: #F0F4F8 !important;
+    }
+
+    @media (max-width: 1180px) {
+      .slide {
+        grid-template-columns: minmax(0, 1fr) minmax(440px, 42vw);
+      }
+
+      .sl-diagram-body svg {
+        max-width: 500px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      #main {
+        grid-template-columns: 1fr;
+      }
+
+      #sidebar {
+        display: none;
+      }
+
+      .slide {
+        grid-template-columns: 1fr;
+      }
+
+      .sl-text {
+        border-right: 0;
+      }
+
+      .sl-diagram {
+        min-height: 420px;
+      }
+    }
+
+    #bottom-nav {
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: #FFFFFF;
+    }
+
+    .bn-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bn-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bn-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--g3);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .bn-dot.active {
+      background: var(--gold);
+      width: 20px;
+      border-radius: 3px;
+    }
+
+    .bn-dot.done {
+      background: var(--gold-d);
+    }
+
+    .bn-counter {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      color: var(--g1);
+      margin-left: 16px;
+    }
+
+    .bn-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-prev {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--g1);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-prev:hover {
+      color: var(--g1);
+      border-color: var(--bhi);
+    }
+
+    .btn-prev:disabled {
+      opacity: 0.3;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .btn-next {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-next:hover {
+      background: var(--gold-l);
+      transform: translateY(-1px);
+    }
+
+    .btn-finish,
+    .btn-sim {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-finish:hover,
+    .btn-sim:hover {
+      background: var(--gold-l);
+      transform: translateY(-1px);
+    }
+
+    .btn-sim {
+      background: var(--brand-mint);
+      color: #000;
+    }
+
+    .btn-sim:hover {
+      background: #77E3CF;
+    }
+
+    @keyframes ionD {
+      0% {
+        transform: translateY(-8px);
+        opacity: 0;
+      }
+
+      12% {
+        opacity: .75;
+      }
+
+      88% {
+        opacity: .75;
+      }
+
+      100% {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes atomU {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0;
+      }
+
+      8% {
+        opacity: .85;
+      }
+
+      92% {
+        opacity: .85;
+      }
+
+      100% {
+        transform: translate(var(--ax, 0px), var(--ay, -70px));
+        opacity: 0;
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: .3;
+      }
+
+      50% {
+        opacity: .6;
+      }
+    }
+
+    @keyframes race {
+
+      0%,
+      100% {
+        stroke-opacity: .3;
+        stroke-width: 1.5;
+      }
+
+      50% {
+        stroke-opacity: .85;
+        stroke-width: 2.5;
+      }
+    }
+
+    @keyframes orbit {
+      from {
+        transform: rotate(0deg) translateX(var(--r, 18px)) rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg) translateX(var(--r, 18px)) rotate(-360deg);
+      }
+    }
+
+    @keyframes filmG {
+
+      0%,
+      100% {
+        fill-opacity: .35;
+      }
+
+      50% {
+        fill-opacity: .7;
+      }
+    }
+
+    @keyframes scatterAtom {
+      0% {
+        transform: translate(0, 0);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: .8;
+      }
+
+      100% {
+        transform: translate(var(--sx, 30px), var(--sy, -20px));
+        opacity: 0;
+      }
+    }
+
+    .aIon1 {
+      animation: ionD 1.4s 0.00s ease-in infinite;
+    }
+
+    .aIon2 {
+      animation: ionD 1.4s 0.35s ease-in infinite;
+    }
+
+    .aIon3 {
+      animation: ionD 1.4s 0.70s ease-in infinite;
+    }
+
+    .aIon4 {
+      animation: ionD 1.4s 1.05s ease-in infinite;
+    }
+
+    .aAtm1 {
+      animation: atomU 1.6s 0.1s ease-out infinite;
+      --ax: -28px;
+      --ay: -72px;
+    }
+
+    .aAtm2 {
+      animation: atomU 1.6s 0.55s ease-out infinite;
+      --ax: 5px;
+      --ay: -80px;
+    }
+
+    .aAtm3 {
+      animation: atomU 1.6s 1.0s ease-out infinite;
+      --ax: 26px;
+      --ay: -70px;
+    }
+
+    .aAtm4 {
+      animation: atomU 1.8s 1.4s ease-out infinite;
+      --ax: -12px;
+      --ay: -85px;
+    }
+
+    .aPulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .aRace {
+      animation: race 1.9s ease-in-out infinite;
+    }
+
+    .aFilm {
+      animation: filmG 2.8s ease-in-out infinite;
+    }
+
+    .aOrb1 {
+      animation: orbit 2.3s linear infinite;
+      transform-origin: center;
+      --r: 18px;
+    }
+
+    .aOrb2 {
+      animation: orbit 1.7s linear infinite;
+      transform-origin: center;
+      --r: 12px;
+    }
+
+    .aOrb3 {
+      animation: orbit 3.1s linear infinite;
+      transform-origin: center;
+      --r: 25px;
+    }
+
+    .aScat {
+      animation: scatterAtom var(--dur, 1.4s) var(--del, 0s) ease-out infinite;
+    }
+  </style>
+</head>
+
+<body>
+  <nav id="nav">
+      <a href="index.html" class="nav-back" data-lang-key="home">
+      <img src="img/sputterone-icon.png" alt="SputterOne" style="width:26px;height:26px;object-fit:contain;border-radius:6px;display:block;">
+      <span style="font-family:'Barlow',
+  'Segoe UI',sans-serif; font-size:11px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:#E0E0E0; margin-left:8px;">
+  Sputter<span style="color:#5AD8BE;">One</span>
+</span>
+      Back to Home
+    </a>
+
+      <div class="nav-right"><a href="physics.html" style="color:#E0E0E0;text-decoration:none;margin-right:16px;letter-spacing:1.6px;text-transform:uppercase;">Physics Model</a><a href="labs.html" style="color:#E0E0E0;text-decoration:none;margin-right:16px;letter-spacing:1.6px;text-transform:uppercase;">Virtual Labs</a><span style="color:#E0E0E0; font-size:12px;">Dr. Balaji Gururajan | YZU Taiwan</span></div>
+  </nav>
+  <div id="progress-bar">
+    <div id="progress-fill" style="width:6.67%"></div>
+  </div>
+  <div id="main">
+    <aside id="sidebar">
+      <div class="sb-header">Chapters</div>
+      <div class="chapter-item active" data-slide="0"><div class="ch-num">01</div><div class="ch-info"><div class="ch-title">Why Thin Films?</div><div class="ch-tag">Foundation</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="1"><div class="ch-num">02</div><div class="ch-info"><div class="ch-title">Vacuum Science</div><div class="ch-tag">Pressure & Pumps</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="2"><div class="ch-num">03</div><div class="ch-info"><div class="ch-title">Why Argon?</div><div class="ch-tag">Gas Selection</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="3"><div class="ch-num">04</div><div class="ch-info"><div class="ch-title">What is Sputtering?</div><div class="ch-tag">Introduction</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="4"><div class="ch-num">05</div><div class="ch-info"><div class="ch-title">Chamber Components</div><div class="ch-tag">Hardware</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="5"><div class="ch-num">06</div><div class="ch-info"><div class="ch-title">Plasma Formation</div><div class="ch-tag">DC / RF / Breakdown</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="6"><div class="ch-num">07</div><div class="ch-info"><div class="ch-title">Magnetron Design</div><div class="ch-tag">ExB Drift</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="7"><div class="ch-num">08</div><div class="ch-info"><div class="ch-title">Sputtering Yield</div><div class="ch-tag">Yamamura / Bohdansky</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="8"><div class="ch-num">09</div><div class="ch-info"><div class="ch-title">Mean Free Path</div><div class="ch-tag">Gas Transport</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="9"><div class="ch-num">10</div><div class="ch-info"><div class="ch-title">Film Uniformity</div><div class="ch-tag">Deposition</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="10"><div class="ch-num">11</div><div class="ch-info"><div class="ch-title">Reactive Sputtering</div><div class="ch-tag">TiN / Hysteresis</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="11"><div class="ch-num">12</div><div class="ch-info"><div class="ch-title">Co-Sputtering</div><div class="ch-tag">Multi-Gun</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="12"><div class="ch-num">13</div><div class="ch-info"><div class="ch-title">Film Growth Modes</div><div class="ch-tag">FM / VW / SK</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="13"><div class="ch-num">14</div><div class="ch-info"><div class="ch-title">Film Characterisation</div><div class="ch-tag">Metrology</div></div><div class="ch-check">OK</div></div>
+      <div class="chapter-item" data-slide="14"><div class="ch-num">Ref</div><div class="ch-info"><div class="ch-title">References</div><div class="ch-tag">Credits</div></div><div class="ch-check">OK</div></div>
+      <div class="sb-footer">
+        <div class="sb-progress-text" id="sb-prog-text">1 / 15</div>
+        <div style="color:var(--g3);font-size:8px;letter-spacing:1px;">Use arrow keys to navigate</div>
+      </div>
+    </aside>
+    <div id="content">
+      <div id="slide-wrap">
+
+        <!-- SLIDE 1: Why Thin Films -->
+        <div class="slide active" id="slide-0">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 01</span><span class="sl-sep">/</span><span class="sl-page">Foundation</span></div>
+            <div class="sl-title">Why<br><span>Thin Films?</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">A <em>thin film</em> is a layer of material ranging from a single atom to several micrometres thick, deposited onto a substrate. Despite their minimal thickness, thin films fundamentally alter a surface's electrical, optical, mechanical, and chemical properties.</p>
+            <p class="sl-body">Almost every modern technology depends on them - from the copper wiring inside your CPU to the anti-reflection coating on your glasses.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">A 100 nm TiN barrier layer deposited by reactive sputtering is standard practice in CMOS back-end-of-line interconnects. Without it, copper diffuses into silicon within hours at operating temperature and destroys the transistor.</div>
+              <div class="ref-cite">Edelstein et al., IBM J. Res. Dev. 43(3), 1999 &mdash; first Cu interconnect integration at 0.25 &micro;m node.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Thickness Ranges</div>
+              <div class="key-box-text">Monolayer (atomic): ~0.2 nm<br>Semiconductor gates: 1-10 nm<br>Metal interconnects: 20-500 nm<br>Hard coatings (TiN): 1-5 um<br>Decorative / optical: 50-300 nm</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>Semiconductors:</strong> Cu/Ta/TiN interconnects in every IC chip</li>
+              <li><strong>Displays:</strong> ITO transparent electrodes on every touchscreen</li>
+              <li><strong>Solar cells:</strong> CIGS and CdTe absorber layers by sputtering</li>
+              <li><strong>Hard coatings:</strong> TiN on drill bits - gold-coloured, 3x harder</li>
+              <li><strong>Optics:</strong> Anti-reflection, mirror, and filter coatings</li>
+              <li><strong>Magnetic storage:</strong> Co/Pt multilayer films on hard drives</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Thin Film Applications</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 320" width="360" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <filter id="tf1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                </defs>
+                <!-- CPU cross-section -->
+                <text x="180" y="22" text-anchor="middle" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">IC INTERCONNECT STACK</text>
+                <rect x="40" y="30" width="280" height="12" rx="1" fill="#1a2030" stroke="#304050" stroke-width="0.8"/>
+                <text x="44" y="40" fill="#506080" font-size="6" font-family="IBM Plex Mono">SiO2 dielectric</text>
+                <rect x="40" y="44" width="280" height="8" rx="1" fill="rgba(180,120,30,0.5)" stroke="#c08030" stroke-width="0.7"/>
+                <text x="44" y="51" fill="#c08030" font-size="6" font-family="IBM Plex Mono">Cu 300 nm</text>
+                <rect x="40" y="54" width="280" height="5" rx="1" fill="rgba(100,160,200,0.45)" stroke="#60a0c0" stroke-width="0.7"/>
+                <text x="44" y="59" fill="#60a0c0" font-size="6" font-family="IBM Plex Mono">TaN 3 nm</text>
+                <rect x="40" y="61" width="280" height="12" rx="1" fill="#0e1420" stroke="#283040" stroke-width="0.8"/>
+                <text x="44" y="71" fill="#405060" font-size="6" font-family="IBM Plex Mono">SiO2 dielectric</text>
+                <rect x="40" y="75" width="280" height="8" rx="1" fill="rgba(180,120,30,0.5)" stroke="#c08030" stroke-width="0.7"/>
+                <rect x="40" y="85" width="280" height="5" rx="1" fill="rgba(100,160,200,0.45)" stroke="#60a0c0" stroke-width="0.7"/>
+                <rect x="40" y="92" width="280" height="20" rx="1" fill="#0a0e18" stroke="#202838" stroke-width="0.8"/>
+                <text x="44" y="106" fill="#303848" font-size="6" font-family="IBM Plex Mono">Si substrate</text>
+                <!-- Applications grid -->
+                <text x="180" y="132" text-anchor="middle" fill="#667081" font-size="7" font-family="IBM Plex Mono" letter-spacing="2">OTHER APPLICATIONS</text>
+                <!-- Solar -->
+                <rect x="40" y="142" width="76" height="54" rx="3" fill="#0a1520" stroke="#203040" stroke-width="0.8"/>
+                <rect x="44" y="146" width="68" height="6" rx="1" fill="rgba(90,180,120,0.6)" stroke="#50c070" stroke-width="0.5"/>
+                <rect x="44" y="154" width="68" height="10" rx="1" fill="rgba(50,130,200,0.5)" stroke="#3090d0" stroke-width="0.5"/>
+                <rect x="44" y="166" width="68" height="6" rx="1" fill="rgba(180,100,20,0.5)" stroke="#c07020" stroke-width="0.5"/>
+                <rect x="44" y="174" width="68" height="6" rx="1" fill="#0a0e18" stroke="#202030" stroke-width="0.5"/>
+                <text x="80" y="208" text-anchor="middle" fill="#50c070" font-size="7.5" font-family="IBM Plex Mono">Solar Cell</text>
+                <text x="80" y="218" text-anchor="middle" fill="#506070" font-size="6.5" font-family="IBM Plex Mono">CIGS / CdTe</text>
+                <!-- Hard coating -->
+                <rect x="142" y="142" width="76" height="54" rx="3" fill="#0a1520" stroke="#203040" stroke-width="0.8"/>
+                <rect x="146" y="146" width="68" height="8" rx="1" fill="rgba(200,160,30,0.7)" stroke="#d4a820" stroke-width="0.7"/>
+                <text x="150" y="153" fill="#a07818" font-size="5.5" font-family="IBM Plex Mono">TiN 3 um</text>
+                <rect x="146" y="156" width="68" height="28" rx="1" fill="rgba(80,100,130,0.4)" stroke="#506070" stroke-width="0.5"/>
+                <text x="180" y="174" text-anchor="middle" fill="#607090" font-size="5.5" font-family="IBM Plex Mono">steel substrate</text>
+                <text x="180" y="208" text-anchor="middle" fill="#d4a820" font-size="7.5" font-family="IBM Plex Mono">Hard Coating</text>
+                <text x="180" y="218" text-anchor="middle" fill="#506070" font-size="6.5" font-family="IBM Plex Mono">TiN drill bit</text>
+                <!-- Optical -->
+                <rect x="244" y="142" width="76" height="54" rx="3" fill="#0a1520" stroke="#203040" stroke-width="0.8"/>
+                <rect x="248" y="146" width="68" height="4" rx="1" fill="rgba(100,200,255,0.45)" stroke="#40c0f0" stroke-width="0.5"/>
+                <rect x="248" y="152" width="68" height="4" rx="1" fill="rgba(200,100,200,0.45)" stroke="#c060c0" stroke-width="0.5"/>
+                <rect x="248" y="158" width="68" height="4" rx="1" fill="rgba(100,200,255,0.45)" stroke="#40c0f0" stroke-width="0.5"/>
+                <rect x="248" y="164" width="68" height="4" rx="1" fill="rgba(200,100,200,0.45)" stroke="#c060c0" stroke-width="0.5"/>
+                <rect x="248" y="170" width="68" height="14" rx="1" fill="rgba(180,190,200,0.2)" stroke="#404858" stroke-width="0.5"/>
+                <text x="282" y="208" text-anchor="middle" fill="#40c0f0" font-size="7.5" font-family="IBM Plex Mono">Optical Film</text>
+                <text x="282" y="218" text-anchor="middle" fill="#506070" font-size="6.5" font-family="IBM Plex Mono">AR coating</text>
+                <!-- Scale bar -->
+                <text x="180" y="246" text-anchor="middle" fill="#667081" font-size="7" font-family="IBM Plex Mono" letter-spacing="1">Thin films: where nm thickness = bulk performance</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 2: Vacuum Science -->
+        <div class="slide" id="slide-1">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 02</span><span class="sl-sep">/</span><span class="sl-page">Pressure & Pumps</span></div>
+            <div class="sl-title">Vacuum<br><span>Science</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">Sputtering requires a <em>controlled low-pressure environment</em>. Without vacuum, sputtered atoms collide with air molecules and never reach the substrate. Oxygen and water vapour would also contaminate the film instantly.</p>
+            <p class="sl-body">At atmosphere (760 Torr), a monolayer of oxygen forms on a clean metal surface in under <strong>1 nanosecond</strong>. At 10^-8 Torr base pressure, you have roughly <strong>1000 seconds</strong> - enough time to deposit clean film.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">A typical production magnetron sputter tool reaches a base pressure of 10⁻⁸ Torr before introducing working gas. At this pressure the mean free path of residual gas molecules exceeds 5 km &mdash; the chamber is effectively empty space.</div>
+              <div class="ref-cite">Ohring, M. &mdash; Materials Science of Thin Films, 2nd ed., Academic Press, 2002, Ch. 3.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Vacuum Pump Sequence (Ohring Ch.2)</div>
+              <div class="key-box-text">1. Rotary/scroll pump: atm -> 10^-3 Torr (rough vacuum)<br>2. Turbomolecular pump: 10^-3 -> 10^-8 Torr (high vacuum)<br>3. Cryopump: traps residual gas by freezing<br><br>Sputtering process: 1-20 mTorr (Ar backfill)<br>Base pressure required: &lt; 10^-7 Torr</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>Rough vacuum</strong> (1-760 Torr): mechanical pumps, food packaging</li>
+              <li><strong>Medium vacuum</strong> (10^-3 Torr): fluorescent lamps, incandescent bulbs</li>
+              <li><strong>High vacuum</strong> (10^-6 Torr): electron microscopes, sputter tools</li>
+              <li><strong>Ultra-high vacuum</strong> (&lt;10^-9 Torr): surface science, particle accelerators</li>
+              <li>Outgassing from chamber walls is the main limit to base pressure - bake-out at 150-300 C drives off adsorbed water</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Vacuum Pressure Scale & Pump Stages</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 340 340" width="340" height="340" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="vf1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Vertical pressure scale -->
+                <line x1="60" y1="20" x2="60" y2="300" stroke="#303848" stroke-width="1"/>
+                <!-- Pressure levels -->
+                <line x1="55" y1="30"  x2="65" y2="30"  stroke="#505868" stroke-width="1"/>
+                <text x="52" y="34"  text-anchor="end" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono">760</text>
+                <text x="68" y="34"  fill="#d0d6df" font-size="8" font-family="IBM Plex Mono">Atmosphere</text>
+                <line x1="55" y1="80"  x2="65" y2="80"  stroke="#505868" stroke-width="1"/>
+                <text x="52" y="84"  text-anchor="end" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono">1</text>
+                <text x="68" y="84"  fill="#d0d6df" font-size="8" font-family="IBM Plex Mono">Rough vacuum</text>
+                <line x1="55" y1="130" x2="65" y2="130" stroke="#505868" stroke-width="1"/>
+                <text x="52" y="134" text-anchor="end" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono">10^-3</text>
+                <text x="68" y="116" fill="#d9b25a" font-size="8" font-family="IBM Plex Mono">Sputter process</text>
+                <line x1="55" y1="175" x2="65" y2="175" stroke="#505868" stroke-width="1"/>
+                <text x="52" y="179" text-anchor="end" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono">10^-6</text>
+                <text x="68" y="179" fill="#d0d6df" font-size="8" font-family="IBM Plex Mono">High vacuum</text>
+                <line x1="55" y1="220" x2="65" y2="220" stroke="#505868" stroke-width="1"/>
+                <text x="52" y="224" text-anchor="end" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono">10^-8</text>
+                <text x="68" y="224" fill="#00c8e8" font-size="8" font-family="IBM Plex Mono">Base pressure target</text>
+                <line x1="55" y1="270" x2="65" y2="270" stroke="#505868" stroke-width="1"/>
+                <text x="52" y="274" text-anchor="end" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono">10^-10</text>
+                <text x="68" y="274" fill="#d0d6df" font-size="8" font-family="IBM Plex Mono">Ultra-high vacuum</text>
+                <!-- Pump brackets -->
+                <rect x="290" y="30"  width="36" height="100" rx="2" fill="rgba(180,120,30,0.15)" stroke="#a07020" stroke-width="0.8"/>
+                <text x="308" y="88"  text-anchor="middle" fill="#a07020" font-size="7" font-family="IBM Plex Mono" transform="rotate(-90,308,88)">Rotary pump</text>
+                <rect x="290" y="130" width="36" height="90"  rx="2" fill="rgba(0,160,200,0.15)" stroke="#0090c0" stroke-width="0.8"/>
+                <text x="308" y="182" text-anchor="middle" fill="#0090c0" font-size="7" font-family="IBM Plex Mono" transform="rotate(-90,308,182)">Turbo pump</text>
+                <rect x="290" y="220" width="36" height="60"  rx="2" fill="rgba(100,200,255,0.12)" stroke="#40b0e0" stroke-width="0.8"/>
+                <text x="308" y="255" text-anchor="middle" fill="#40b0e0" font-size="7" font-family="IBM Plex Mono" transform="rotate(-90,308,255)">Cryopump</text>
+                <!-- Sputter band -->
+                <rect x="62" y="120" width="220" height="30" rx="2" fill="rgba(212,168,71,0.07)" stroke="rgba(212,168,71,0.3)" stroke-width="0.8" stroke-dasharray="4,3"/>
+                <text x="172" y="139" text-anchor="middle" fill="#d9b25a" font-size="7.5" font-family="IBM Plex Mono">1-20 mTorr Ar</text>
+                <!-- Arrow -->
+                <text x="18" y="160" fill="#505868" font-size="8" font-family="IBM Plex Mono" transform="rotate(-90,18,160)">Pressure (Torr) - log scale</text>
+                <text x="180" y="315" text-anchor="middle" fill="#667081" font-size="7" font-family="IBM Plex Mono" letter-spacing="1">Lower pressure = cleaner film = longer mean free path</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 3: Why Argon -->
+        <div class="slide" id="slide-2">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 03</span><span class="sl-sep">/</span><span class="sl-page">Gas Selection</span></div>
+            <div class="sl-title">Why<br><span>Argon?</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">Not all gases sputter equally. The ideal sputter gas must be <em>chemically inert</em> (won't react with the target or film), and have an <em>atomic mass close to the target</em> to maximise momentum transfer during collisions.</p>
+            <p class="sl-body">Argon (Ar, Z=18, mass=40 amu) is the perfect balance of cost, availability, inertness, and mass-matching for most metals used in industry.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">Argon is used in over 90% of industrial sputtering processes. Krypton is occasionally substituted for heavy-target materials (W, Ta, Mo) because the closer mass match improves momentum transfer and raises yield by 15&ndash;30%.</div>
+              <div class="ref-cite">Depla, D. &amp; Mahieu, S. &mdash; Reactive Sputter Deposition, Springer, 2008, Ch. 2.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Momentum Transfer Factor gamma (Simon 4.2)</div>
+              <div class="key-box-text">gamma = 4*m_g*m_t / (m_g + m_t)^2<br><br>Ar-Cu: gamma = 4*40*64/(40+64)^2 = 0.944<br>Ar-Al: gamma = 4*40*27/(40+27)^2 = 0.965<br>He-Cu: gamma = 4*4*64/(4+64)^2 = 0.222 (too light)<br><br>Higher gamma = more energy transferred per collision</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>He (4 amu):</strong> too light - poor momentum transfer, low yield</li>
+              <li><strong>Ne (20 amu):</strong> better for light targets (Al, Si), expensive</li>
+              <li><strong>Ar (40 amu):</strong> optimal for Ti, Cu, Al, Ta - cheap and abundant</li>
+              <li><strong>Kr (84 amu):</strong> better for heavy targets (W, Au), but expensive</li>
+              <li><strong>Xe (131 amu):</strong> highest yield for heavy metals, very expensive</li>
+              <li><strong>Reactive gases (O2, N2):</strong> added to Ar to deposit TiO2, TiN, Al2O3</li>
+              <li>Ar ionisation energy: 15.76 eV - comfortably above typical plasma electron temperatures</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Noble Gas Mass vs Momentum Transfer</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 340 320" width="340" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="af1"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Axes -->
+                <line x1="50" y1="260" x2="320" y2="260" stroke="#303848" stroke-width="1"/>
+                <line x1="50" y1="260" x2="50"  y2="30"  stroke="#303848" stroke-width="1"/>
+                <text x="185" y="285" text-anchor="middle" fill="#667081" font-size="8" font-family="IBM Plex Mono">Noble gas mass (amu)</text>
+                <text x="18" y="155" text-anchor="middle" fill="#667081" font-size="8" font-family="IBM Plex Mono" transform="rotate(-90,18,155)">Momentum transfer gamma (Cu target)</text>
+                <!-- Curve for Cu target ? vs gas mass -->
+                <path d="M55,240 Q100,160 150,80 Q190,40 230,55 Q270,80 310,120" fill="none" stroke="#d9b25a" stroke-width="1.5" stroke-opacity="0.5" stroke-dasharray="4,3"/>
+                <!-- Gas markers -->
+                <circle cx="65"  cy="235" r="8"  fill="rgba(100,160,220,0.3)" stroke="#60a0d0" stroke-width="1" filter="url(#af1)"/>
+                <text x="65"  cy="235" text-anchor="middle" y="239" fill="#60a0d0" font-size="7" font-family="IBM Plex Mono">He</text>
+                <text x="65"  y="253" text-anchor="middle" fill="#405870" font-size="6.5" font-family="IBM Plex Mono">4</text>
+                <circle cx="110" cy="165" r="8"  fill="rgba(100,160,220,0.3)" stroke="#60a0d0" stroke-width="1" filter="url(#af1)"/>
+                <text x="110" cy="165" text-anchor="middle" y="169" fill="#60a0d0" font-size="7" font-family="IBM Plex Mono">Ne</text>
+                <text x="110" y="183" text-anchor="middle" fill="#405870" font-size="6.5" font-family="IBM Plex Mono">20</text>
+                <circle cx="163" cy="70"  r="12" fill="rgba(212,168,71,0.35)" stroke="#d9b25a" stroke-width="1.5" filter="url(#af1)"/>
+                <text x="163" cy="70" text-anchor="middle" y="74" fill="#d9b25a" font-size="8" font-family="IBM Plex Mono">Ar</text>
+                <text x="163" y="91" text-anchor="middle" fill="#a07820" font-size="6.5" font-family="IBM Plex Mono">40</text>
+                <circle cx="218" cy="48"  r="8"  fill="rgba(100,160,220,0.3)" stroke="#60a0d0" stroke-width="1" filter="url(#af1)"/>
+                <text x="218" cy="48" text-anchor="middle" y="52" fill="#60a0d0" font-size="7" font-family="IBM Plex Mono">Kr</text>
+                <text x="218" y="66" text-anchor="middle" fill="#405870" font-size="6.5" font-family="IBM Plex Mono">84</text>
+                <circle cx="273" cy="60"  r="8"  fill="rgba(100,160,220,0.3)" stroke="#60a0d0" stroke-width="1" filter="url(#af1)"/>
+                <text x="273" cy="60" text-anchor="middle" y="64" fill="#60a0d0" font-size="7" font-family="IBM Plex Mono">Xe</text>
+                <text x="273" y="78" text-anchor="middle" fill="#405870" font-size="6.5" font-family="IBM Plex Mono">131</text>
+                <!-- Cu line -->
+                <line x1="163" y1="30" x2="163" y2="260" stroke="rgba(180,120,30,0.3)" stroke-width="0.8" stroke-dasharray="3,4"/>
+                <text x="163" y="25" text-anchor="middle" fill="#a07820" font-size="7" font-family="IBM Plex Mono">Cu (64)</text>
+                <!-- Annotation -->
+                <rect x="50" y="295" width="260" height="16" rx="2" fill="rgba(212,168,71,0.06)" stroke="rgba(212,168,71,0.15)" stroke-width="0.5"/>
+                <text x="180" y="307" text-anchor="middle" fill="#a07820" font-size="7.5" font-family="IBM Plex Mono">Ar is optimal: cheap, inert, mass-matched to most targets</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 4: What is Sputtering -->
+        <div class="slide" id="slide-3">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 04</span><span class="sl-sep">/</span><span class="sl-page">Introduction</span></div>
+            <div class="sl-title">What is<br><span>Sputtering?</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body"><strong>Sputtering</strong> is a physical vapor deposition (PVD) process in which atoms are ejected from a solid <em>target material</em> by bombardment with energetic ions - typically Ar+.</p>
+            <p class="sl-body">The ejected atoms travel through the vacuum and condense on a substrate to nucleate a thin film of the ejected material. The ion energy must exceed the target's <em>surface binding energy</em> (typically 25-40 eV) to initiate ejection.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">The first documented observation of sputtering was by Grove in 1852, who noticed metal deposits forming on glass walls near a platinum cathode in a glow discharge. It took over a century for the Yamamura yield formula to put quantitative predictions on a firm theoretical footing.</div>
+              <div class="ref-cite">Grove, W.R. &mdash; Phil. Trans. R. Soc. London 142, 1852. Yamamura &amp; Tawara, ADNDT 62(2), 1996.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Three Energy Regimes (Simon 4.3)</div>
+              <div class="key-box-text">- Subthreshold (&lt;50 eV): yield ~ 0, no sputtering<br>- Knock-on (50 eV-1 keV): linear cascade, Y = 0.1-3<br>- Nonlinear cascade (&gt;1 keV): Y = 5-50+, deep implant<br><br>Industrial use: regime 2 - predictable, controllable</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li>Yield Y = atoms ejected / ion incident - the key efficiency metric</li>
+              <li>Sputtered atoms leave with <strong>3-20 eV</strong> energy - much higher than evaporation (~0.1 eV), giving denser, better-adhered films</li>
+              <li>Stoichiometry is preserved - multi-element targets deposit the same ratio</li>
+              <li>Works on metals, alloys, oxides, nitrides - any condensed material</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Sputtering Event & Energy Cascade</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 310" width="360" height="310" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <filter id="sf1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3Z" fill="#4858b8" opacity="0.8"/></marker>
+                  <marker id="arr2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3Z" fill="#c87828" opacity="0.8"/></marker>
+                </defs>
+                <!-- Target -->
+                <rect x="30" y="180" width="300" height="40" rx="2" fill="#0c1020" stroke="#303848" stroke-width="0.8"/>
+                <text x="180" y="205" text-anchor="middle" fill="#505868" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">TARGET (Cu)</text>
+                <!-- Lattice atoms in target -->
+                <circle cx="70"  cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="100" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="130" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="160" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="190" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="220" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="250" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <circle cx="280" cy="165" r="5" fill="#2a304a" stroke="#4a5878" stroke-width="0.8"/>
+                <!-- Incident Ar+ ion -->
+                <circle class="aIon1" cx="160" cy="60" r="6" fill="#4858b8" filter="url(#sf1)"/>
+                <text x="172" y="64" fill="#4858b8" font-size="7" font-family="IBM Plex Mono">Ar+</text>
+                <line x1="160" y1="72" x2="160" y2="150" stroke="#4858b8" stroke-width="1" stroke-opacity="0.4" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+                <!-- Collision cascade arrows -->
+                <line x1="160" y1="165" x2="130" y2="165" stroke="#c87828" stroke-width="1" stroke-opacity="0.5" marker-end="url(#arr2)"/>
+                <line x1="130" y1="165" x2="100" y2="165" stroke="#c87828" stroke-width="0.8" stroke-opacity="0.35" marker-end="url(#arr2)"/>
+                <!-- Ejected atom -->
+                <circle class="aAtm1" cx="160" cy="165" r="5.5" fill="#c87828" filter="url(#sf1)"/>
+                <circle class="aAtm2" cx="130" cy="165" r="4"   fill="#c87828" fill-opacity="0.7" filter="url(#sf1)"/>
+                <!-- Substrate at top -->
+                <rect x="30" y="20" width="300" height="12" rx="2" fill="#141828" stroke="#3a5070" stroke-width="0.8"/>
+                <text x="180" y="30" text-anchor="middle" fill="#7090b8" font-size="7" font-family="IBM Plex Mono" letter-spacing="2">SUBSTRATE - FILM FORMS HERE</text>
+                <!-- Energy scale bar -->
+                <text x="30" y="250" fill="#405060" font-size="7" font-family="IBM Plex Mono">Energy regimes:</text>
+                <rect x="30" y="256" width="60" height="10" rx="1" fill="rgba(80,80,120,0.3)" stroke="#404870" stroke-width="0.5"/>
+                <text x="60" y="264" text-anchor="middle" fill="#606890" font-size="6.5" font-family="IBM Plex Mono">&lt;50 eV</text>
+                <rect x="96" y="256" width="100" height="10" rx="1" fill="rgba(212,168,71,0.25)" stroke="#a07820" stroke-width="0.8"/>
+                <text x="146" y="264" text-anchor="middle" fill="#d9b25a" font-size="6.5" font-family="IBM Plex Mono">50 eV - 1 keV</text>
+                <rect x="202" y="256" width="80" height="10" rx="1" fill="rgba(180,60,60,0.2)" stroke="#803030" stroke-width="0.5"/>
+                <text x="242" y="264" text-anchor="middle" fill="#a06060" font-size="6.5" font-family="IBM Plex Mono">&gt;1 keV</text>
+                <text x="180" y="285" text-anchor="middle" fill="#667081" font-size="7" font-family="IBM Plex Mono">Collision cascade ejects atoms toward substrate</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 5: Chamber Components -->
+        <div class="slide" id="slide-4">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 05</span><span class="sl-sep">/</span><span class="sl-page">Hardware</span></div>
+            <div class="sl-title">Chamber<br><span>Components</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">A magnetron sputtering system consists of several precisely engineered components. In industrial semiconductor manufacturing, these are arranged in a <em>clustered single-wafer tool</em> - individual process chambers on a central vacuum mainframe.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">In a 300 mm wafer production cluster tool, the substrate never sees atmospheric pressure between deposition steps. The loadlock cycles from atmosphere to 10⁻⁶ Torr in under 60 seconds using a turbomolecular pump backed by a dry scroll pump &mdash; no oil anywhere in the system.</div>
+              <div class="ref-cite">Madou, M.J. &mdash; Fundamentals of Microfabrication, CRC Press, 2002, Ch. 3.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Clustered Tool Sequence (Simon 4.6.2)</div>
+              <div class="key-box-text">Loadlock -> Degas (150-300 C) -> Preclean<br>-> PVD Chamber 1 -> PVD Chamber 2 -> Cool<br><br>Each wafer processed individually<br>Never breaks vacuum between steps<br>Base pressure: 10^-8 - 10^-9 Torr</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>Target (cathode):</strong> solid source material, 2-8 inch diameter, water-cooled</li>
+              <li><strong>Substrate (anode):</strong> wafer or glass held on heated/cooled pedestal</li>
+              <li><strong>Vacuum chamber:</strong> stainless steel, cryopumped, base &lt;10^-7 Torr</li>
+              <li><strong>Gas inlet:</strong> mass flow controllers for Ar (and reactive gases)</li>
+              <li><strong>Magnetron assembly:</strong> permanent magnets behind target, often motor-driven</li>
+              <li><strong>Power supply:</strong> DC (metals) or RF 13.56 MHz (insulators)</li>
+              <li><strong>Shielding:</strong> prevents deposition on chamber walls, must be replaced periodically</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Magnetron Sputter Chamber</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 320" width="360" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="cf1"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Chamber walls -->
+                <rect x="30" y="30" width="300" height="260" rx="4" fill="none" stroke="#252e40" stroke-width="2"/>
+                <text x="34" y="48" fill="#303848" font-size="7" font-family="IBM Plex Mono">VACUUM CHAMBER</text>
+                <!-- Power supply -->
+                <rect x="38" y="55" width="50" height="28" rx="2" fill="#0d1018" stroke="#303848" stroke-width="0.8"/>
+                <text x="63" y="67" text-anchor="middle" fill="#506070" font-size="6" font-family="IBM Plex Mono">DC/RF</text>
+                <text x="63" y="76" text-anchor="middle" fill="#506070" font-size="6" font-family="IBM Plex Mono">SUPPLY</text>
+                <line x1="88" y1="68" x2="120" y2="68" stroke="#a07820" stroke-width="0.8" stroke-dasharray="3,3"/>
+                <!-- Magnets -->
+                <rect x="120" y="55" width="120" height="14" rx="2" fill="#1a1020" stroke="#5a3050" stroke-width="0.8"/>
+                <text x="180" y="66" text-anchor="middle" fill="#6a4060" font-size="6.5" font-family="IBM Plex Mono">MAGNETS (N-S-N)</text>
+                <!-- Target -->
+                <rect x="110" y="72" width="140" height="16" rx="2" fill="#1a2535" stroke="#4a6080" stroke-width="1"/>
+                <text x="180" y="84" text-anchor="middle" fill="#7090b8" font-size="7" font-family="IBM Plex Mono">TARGET - CATHODE</text>
+                <!-- Plasma zone -->
+                <ellipse cx="180" cy="140" rx="70" ry="35" fill="rgba(100,60,180,0.12)" stroke="rgba(120,80,200,0.3)" stroke-width="0.8" class="aPulse"/>
+                <text x="180" y="135" text-anchor="middle" fill="#8060c0" font-size="7.5" font-family="IBM Plex Mono">PLASMA</text>
+                <text x="180" y="147" text-anchor="middle" fill="#6040a0" font-size="6.5" font-family="IBM Plex Mono">Ar ionisation zone</text>
+                <!-- Ions and atoms -->
+                <circle class="aIon1" cx="160" cy="105" r="4" fill="#4858b8" filter="url(#cf1)"/>
+                <circle class="aIon2" cx="180" cy="105" r="4" fill="#4858b8" filter="url(#cf1)"/>
+                <circle class="aIon3" cx="200" cy="105" r="4" fill="#4858b8" filter="url(#cf1)"/>
+                <circle class="aAtm1" cx="160" cy="92"  r="4" fill="#c87828" filter="url(#cf1)" style="--ax:-18px;--ay:-42px;"/>
+                <circle class="aAtm2" cx="185" cy="94"  r="3.5" fill="#c87828" filter="url(#cf1)" style="--ax:4px;--ay:-48px;"/>
+                <circle class="aAtm3" cx="205" cy="92"  r="4" fill="#c87828" filter="url(#cf1)" style="--ax:18px;--ay:-40px;"/>
+                <!-- Substrate -->
+                <rect x="110" y="248" width="140" height="14" rx="2" fill="#0f1928" stroke="#3a5070" stroke-width="1"/>
+                <text x="180" y="259" text-anchor="middle" fill="#5080a0" font-size="7" font-family="IBM Plex Mono">SUBSTRATE - ANODE</text>
+                <!-- Labels -->
+                <text x="290" y="80"  fill="#505868" font-size="7" font-family="IBM Plex Mono">-HV</text>
+                <text x="290" y="255" fill="#505868" font-size="7" font-family="IBM Plex Mono">GND</text>
+                <!-- Gas inlet -->
+                <text x="34" y="160" fill="#406050" font-size="6.5" font-family="IBM Plex Mono">Ar gas</text>
+                <text x="34" y="170" fill="#406050" font-size="6.5" font-family="IBM Plex Mono">inlet -></text>
+                <!-- Pump outlet -->
+                <text x="34" y="220" fill="#304050" font-size="6.5" font-family="IBM Plex Mono">-> Pump</text>
+                <!-- T-S distance arrow -->
+                <line x1="310" y1="88" x2="310" y2="248" stroke="#303848" stroke-width="0.8"/>
+                <line x1="305" y1="88" x2="315" y2="88" stroke="#303848" stroke-width="0.8"/>
+                <line x1="305" y1="248" x2="315" y2="248" stroke="#303848" stroke-width="0.8"/>
+                <text x="325" y="172" text-anchor="middle" fill="#404858" font-size="6.5" font-family="IBM Plex Mono" transform="rotate(90,325,172)">T-S distance 5-25 cm</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 6: Plasma Formation -->
+        <div class="slide" id="slide-5">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 06</span><span class="sl-sep">/</span><span class="sl-page">DC / RF / Breakdown</span></div>
+            <div class="sl-title">Plasma<br><span>Formation</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">When a <strong>high voltage (300-1000 V)</strong> is applied across argon gas at low pressure, free electrons accelerate and collide with Ar atoms. Each collision can ionise the atom, producing Ar+ and a new electron - an <em>avalanche ionisation cascade</em>.</p>
+            <p class="sl-body"><strong>DC plasmas</strong> work for conductive targets. <strong>RF plasmas</strong> (13.56 MHz) are needed for insulating targets - the alternating field prevents charge buildup and achieves higher plasma density through longer electron residence time.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">The Paschen curve predicts the breakdown voltage as a function of pressure &times; electrode gap. For argon the minimum breakdown voltage is approximately 137 V at a pd product of 1 Torr&middot;cm. This is why magnetron systems that compress the plasma magnetically can sustain discharge at much lower pressures than a simple diode configuration.</div>
+              <div class="ref-cite">Lieberman &amp; Lichtenberg &mdash; Principles of Plasma Discharges, Wiley, 2005, Ch. 2.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Ionisation Reaction</div>
+              <div class="key-box-text">e- + Ar -> Ar+ + 2e- (threshold: 15.76 eV)<br><br>Plasma density: 10^9-10^11 cm^-3<br>Electron temperature: 1-5 eV<br>DC diode: ~1-5 mA/cm^2<br>Magnetron: ~10-100 mA/cm^2</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>Sheath (cathode fall):</strong> thin electron-depleted layer at cathode - most voltage drop occurs here, accelerating Ar+ into the target</li>
+              <li><strong>Secondary electrons:</strong> ejected from target by ion impact, re-enter plasma to sustain ionisation (5-10% yield per ion)</li>
+              <li><strong>RF at 13.56 MHz:</strong> electrons oscillate in field, increasing collision probability -> denser plasma at lower pressure</li>
+              <li><strong>Bias sputtering:</strong> RF bias on substrate allows simultaneous deposition and re-sputtering to improve film density</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">DC Plasma Breakdown & Sheath</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 310" width="360" height="310" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="pf1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Target/Cathode -->
+                <rect x="30" y="30" width="300" height="18" rx="2" fill="#1a1520" stroke="#5a3050" stroke-width="1"/>
+                <text x="180" y="43" text-anchor="middle" fill="#8a5070" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">TARGET - CATHODE (-HV)</text>
+                <!-- Sheath zone -->
+                <rect x="30" y="48" width="300" height="22" rx="0" fill="rgba(80,40,120,0.12)" stroke="rgba(100,60,160,0.25)" stroke-width="0.5"/>
+                <text x="180" y="63" text-anchor="middle" fill="#604880" font-size="7.5" font-family="IBM Plex Mono">CATHODE SHEATH (electron-depleted)</text>
+                <!-- Plasma body -->
+                <rect x="30" y="70" width="300" height="140" rx="0" fill="rgba(80,50,160,0.07)"/>
+                <text x="180" y="95" text-anchor="middle" fill="#6040a0" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">PLASMA BODY</text>
+                <!-- Electrons and ions in plasma -->
+                <circle cx="90"  cy="120" r="3.5" fill="#4858b8" filter="url(#pf1)" class="aPulse"/><text x="90"  y="124" text-anchor="middle" fill="#6070c0" font-size="5.5" font-family="IBM Plex Mono">e-</text>
+                <circle cx="150" cy="130" r="3.5" fill="#4858b8" filter="url(#pf1)" class="aPulse"/><text x="150" y="134" text-anchor="middle" fill="#6070c0" font-size="5.5" font-family="IBM Plex Mono">e-</text>
+                <circle cx="210" cy="115" r="3.5" fill="#4858b8" filter="url(#pf1)" class="aPulse"/><text x="210" y="119" text-anchor="middle" fill="#6070c0" font-size="5.5" font-family="IBM Plex Mono">e-</text>
+                <circle cx="270" cy="125" r="3.5" fill="#4858b8" filter="url(#pf1)" class="aPulse"/><text x="270" y="129" text-anchor="middle" fill="#6070c0" font-size="5.5" font-family="IBM Plex Mono">e-</text>
+                <circle cx="120" cy="150" r="5" fill="rgba(70,50,160,0.4)" stroke="#5040a0" stroke-width="0.8"/><text x="120" y="154" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar+</text>
+                <circle cx="200" cy="145" r="5" fill="rgba(70,50,160,0.4)" stroke="#5040a0" stroke-width="0.8"/><text x="200" y="149" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar+</text>
+                <circle cx="260" cy="155" r="5" fill="rgba(70,50,160,0.4)" stroke="#5040a0" stroke-width="0.8"/><text x="260" y="159" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar+</text>
+                <!-- Anode sheath -->
+                <rect x="30" y="210" width="300" height="14" rx="0" fill="rgba(40,60,100,0.1)" stroke="rgba(60,90,140,0.2)" stroke-width="0.5"/>
+                <text x="180" y="221" text-anchor="middle" fill="#405870" font-size="7.5" font-family="IBM Plex Mono">ANODE SHEATH (small)</text>
+                <!-- Substrate -->
+                <rect x="30" y="224" width="300" height="14" rx="2" fill="#0f1928" stroke="#3a5070" stroke-width="1"/>
+                <text x="180" y="235" text-anchor="middle" fill="#4a6888" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">SUBSTRATE - ANODE (GND)</text>
+                <!-- Potential diagram -->
+                <text x="180" y="260" text-anchor="middle" fill="#667081" font-size="7" font-family="IBM Plex Mono">Potential distribution:</text>
+                <path d="M50,275 L80,275 L90,268 Q130,250 180,252 Q230,253 270,268 L280,275 L320,275" fill="none" stroke="#d9b25a" stroke-width="1.2" stroke-opacity="0.6"/>
+                <text x="55" y="286" fill="#a07820" font-size="6.5" font-family="IBM Plex Mono">-HV</text>
+                <text x="165" y="246" fill="#d9b25a" font-size="6.5" font-family="IBM Plex Mono">plasma potential (positive)</text>
+                <text x="296" y="286" fill="#506070" font-size="6.5" font-family="IBM Plex Mono">0V</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 7: Magnetron Design -->
+        <div class="slide" id="slide-6">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 07</span><span class="sl-sep">/</span><span class="sl-page">ExB Drift</span></div>
+            <div class="sl-title">Magnetron<br><span>Design</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">A <em>magnetron</em> uses permanent magnets behind the target to create a magnetic field parallel to the target surface. The crossed electric field (E, normal to target) and magnetic field (B, parallel) produce an <em>ExB drift</em> that traps secondary electrons in cycloidal orbits above the target.</p>
+            <p class="sl-body">This confinement dramatically increases ionisation efficiency - electrons make multiple orbits before being lost, ionising far more Ar atoms per electron than a simple diode discharge.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">A standard unbalanced magnetron of the type used in most research sputter tools produces an E&times;B electron drift that follows the racetrack erosion groove visible on a used target. The racetrack on a 3-inch Cu target after 50 kWh of operation is typically 1&ndash;3 mm deep and causes the target to be scrapped at roughly 30% material utilization.</div>
+              <div class="ref-cite">Kelly &amp; Arnell &mdash; Vacuum 56(3), 2000 &mdash; review of magnetron sputtering.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">ExB Drift Velocity</div>
+              <div class="key-box-text">v_drift = |E x B| / B^2<br><br>B field typical: 0.01-0.05 T<br>Electron confinement: 5x more orbits vs diode<br>Plasma current: 10-100x higher than diode<br>Racetrack erosion: visible groove on target surface</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li>Magnets must be <strong>motor-driven</strong> in industrial tools - static magnets cause non-uniform target erosion (racetrack groove) and uneven film deposition</li>
+              <li><strong>Full-face erosion</strong> is required - redeposited material on uneroded zones flakes off as particles, contaminating the film</li>
+              <li>Typical magnet configurations: cardioid, figure-8, or proprietary orbital paths</li>
+              <li>ExB drift has direct analogies to cyclotron motion and the Hall effect</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">ExB Electron Confinement (Top View)</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 310" width="360" height="310" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="mf1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Target top view -->
+                <ellipse cx="180" cy="155" rx="110" ry="110" fill="#0a0e18" stroke="#202838" stroke-width="1.5"/>
+                <ellipse cx="180" cy="155" rx="90"  ry="90"  fill="#0d1220" stroke="#252e40" stroke-width="1"/>
+                <!-- Racetrack erosion groove -->
+                <ellipse cx="180" cy="155" rx="72" ry="72" fill="none" stroke="#5a3818" stroke-width="6" stroke-opacity="0.5"/>
+                <text x="180" y="103" text-anchor="middle" fill="#4a3010" font-size="7" font-family="IBM Plex Mono">racetrack erosion groove</text>
+                <!-- ExB drift path (electron orbit) -->
+                <ellipse cx="180" cy="155" rx="72" ry="72" fill="none" stroke="#00c8e8" stroke-width="1.5" stroke-dasharray="6,4" class="aRace"/>
+                <!-- Electrons on racetrack -->
+                <circle class="aOrb1" cx="252" cy="155" r="4" fill="#3060d0" filter="url(#mf1)"/>
+                <circle class="aOrb2" cx="180" cy="83"  r="3.5" fill="#3060d0" filter="url(#mf1)"/>
+                <circle class="aOrb3" cx="108" cy="155" r="4" fill="#3060d0" filter="url(#mf1)"/>
+                <!-- Field labels -->
+                <text x="180" y="155" text-anchor="middle" fill="#303848" font-size="9" font-family="IBM Plex Mono">TARGET</text>
+                <text x="180" y="170" text-anchor="middle" fill="#252e3a" font-size="8" font-family="IBM Plex Mono">SURFACE</text>
+                <!-- B field arrows (into page) -->
+                <text x="180" y="205" text-anchor="middle" fill="#5040a0" font-size="7.5" font-family="IBM Plex Mono">B field into target</text>
+                <!-- E field arrow -->
+                <text x="320" y="140" fill="#a07820" font-size="7" font-family="IBM Plex Mono" transform="rotate(90,320,140)">E field normal</text>
+                <!-- Drift label -->
+                <text x="180" y="270" text-anchor="middle" fill="#00a8c8" font-size="8" font-family="IBM Plex Mono">ExB electron drift orbit</text>
+                <!-- Side view inset -->
+                <rect x="30" y="30" width="90" height="60" rx="2" fill="#0a0e18" stroke="#252e40" stroke-width="0.8"/>
+                <text x="75" y="44" text-anchor="middle" fill="#404858" font-size="6" font-family="IBM Plex Mono">SIDE VIEW</text>
+                <rect x="34" y="48" width="82" height="8" rx="1" fill="#1a1020" stroke="#5a3050" stroke-width="0.7"/>
+                <text x="75" y="55" text-anchor="middle" fill="#6a3050" font-size="5.5" font-family="IBM Plex Mono">magnets</text>
+                <rect x="34" y="58" width="82" height="8" rx="1" fill="#151e30" stroke="#405070" stroke-width="0.7"/>
+                <text x="75" y="65" text-anchor="middle" fill="#506080" font-size="5.5" font-family="IBM Plex Mono">target</text>
+                <path d="M50,68 Q58,74 58,80 Q58,86 50,86" fill="none" stroke="#00c8e8" stroke-width="1" stroke-opacity="0.7"/>
+                <path d="M100,68 Q92,74 92,80 Q92,86 100,86" fill="none" stroke="#00c8e8" stroke-width="1" stroke-opacity="0.7"/>
+                <text x="75" y="84" text-anchor="middle" fill="#006878" font-size="5" font-family="IBM Plex Mono">cycloidal e-</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 8: Sputtering Yield -->
+        <div class="slide" id="slide-7">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 08</span><span class="sl-sep">/</span><span class="sl-page">Yamamura / Bohdansky</span></div>
+            <div class="sl-title">Sputtering<br><span>Yield</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">The <em>sputtering yield (Y)</em> defines how many target atoms are ejected per incident ion. It depends on the ion energy, the masses of the ion and target, and the target's surface binding energy.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">Published experimental yields for 500 eV Ar⁺ on Cu are in the range 2.0&ndash;2.5 atoms/ion, depending on surface cleanliness and crystal orientation. The Yamamura formula predicts approximately 2.3 at this energy &mdash; agreement within 10&ndash;15% is typical across the material set.</div>
+              <div class="ref-cite">Yamamura &amp; Tawara &mdash; Atomic Data and Nuclear Data Tables 62(2), 1996.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Yamamura / Bohdansky Reduced-Order Yield Fit</div>
+              <div class="key-box-text">Y(E) ~ Q x S_n(E) / U0 x (1 - (E_th/E)^(2/3))^0.25<br><br>Reduced-order simulator form:<br>Y(E) follows a Yamamura/Bohdansky-style energy fit with threshold, binding-energy, and bounded angle corrections.<br><br>U0 = surface binding energy (eV)<br>E_th = threshold energy<br>Q = material-dependent empirical coefficient</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Cosine Emission Law</div>
+              <div class="key-box-text">j(theta) = Y x f x cos(theta) / p<br><br>Sputtered atoms leave in cosine distribution<br>Low energy: undercosine (flatter)<br>High energy: overcosine (forward-peaked)</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li>Typical yields: Cu=2.3, Al=1.2, Ti=0.58, W=0.56 (at 500 eV Ar+)</li>
+              <li>Yield increases with ion energy (linear in knock-on regime)</li>
+              <li>Heavy ions and light targets give higher yields (mass matching)</li>
+              <li>Threshold energy for Cu: ~17 eV; for W: ~33 eV</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Yield vs Ion Energy (Ar+ on metals)</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 320" width="360" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="yf1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Axes -->
+                <line x1="55" y1="240" x2="320" y2="240" stroke="#303848" stroke-width="1"/>
+                <line x1="55" y1="240" x2="55"  y2="30"  stroke="#303848" stroke-width="1"/>
+                <text x="190" y="268" text-anchor="middle" fill="#667081" font-size="8" font-family="IBM Plex Mono">Ion Energy (eV)</text>
+                <text x="20"  y="140" text-anchor="middle" fill="#667081" font-size="8" font-family="IBM Plex Mono" transform="rotate(-90,20,140)">Sputter Yield Y</text>
+                <!-- X axis labels -->
+                <text x="55"  y="252" text-anchor="middle" fill="#405060" font-size="7" font-family="IBM Plex Mono">10</text>
+                <text x="110" y="252" text-anchor="middle" fill="#405060" font-size="7" font-family="IBM Plex Mono">100</text>
+                <text x="185" y="252" text-anchor="middle" fill="#405060" font-size="7" font-family="IBM Plex Mono">1k</text>
+                <text x="265" y="252" text-anchor="middle" fill="#405060" font-size="7" font-family="IBM Plex Mono">10k</text>
+                <!-- Y axis labels -->
+                <text x="48" y="235" text-anchor="end" fill="#405060" font-size="7" font-family="IBM Plex Mono">0</text>
+                <text x="48" y="190" text-anchor="end" fill="#405060" font-size="7" font-family="IBM Plex Mono">1</text>
+                <text x="48" y="140" text-anchor="end" fill="#405060" font-size="7" font-family="IBM Plex Mono">2</text>
+                <text x="48" y="90"  text-anchor="end" fill="#405060" font-size="7" font-family="IBM Plex Mono">3</text>
+                <!-- Cu curve (highest yield) -->
+                <path d="M75,238 Q90,235 110,210 Q140,175 185,130 Q230,95 265,85 Q295,80 315,82" fill="none" stroke="#c87828" stroke-width="2" filter="url(#yf1)"/>
+                <text x="318" y="80" fill="#c87828" font-size="8" font-family="IBM Plex Mono">Cu</text>
+                <!-- Al curve -->
+                <path d="M75,238 Q92,236 115,220 Q148,193 190,165 Q235,142 268,138 Q295,136 315,138" fill="none" stroke="#4080d0" stroke-width="1.5" filter="url(#yf1)"/>
+                <text x="318" y="136" fill="#4080d0" font-size="8" font-family="IBM Plex Mono">Al</text>
+                <!-- Ti curve -->
+                <path d="M80,238 Q98,237 120,228 Q158,210 200,196 Q240,184 270,182 Q296,180 315,181" fill="none" stroke="#50c070" stroke-width="1.5" filter="url(#yf1)"/>
+                <text x="318" y="179" fill="#50c070" font-size="8" font-family="IBM Plex Mono">Ti</text>
+                <!-- W curve (lowest) -->
+                <path d="M85,238 Q105,237 128,232 Q168,222 210,215 Q248,210 272,208 Q296,207 315,208" fill="none" stroke="#8080a0" stroke-width="1.5" filter="url(#yf1)"/>
+                <text x="318" y="206" fill="#8080a0" font-size="8" font-family="IBM Plex Mono">W</text>
+                <!-- Industrial window shading -->
+                <rect x="110" y="30" width="75" height="210" fill="rgba(212,168,71,0.04)" stroke="rgba(212,168,71,0.2)" stroke-width="0.5" stroke-dasharray="3,4"/>
+                <text x="147" y="46" text-anchor="middle" fill="#806010" font-size="7" font-family="IBM Plex Mono">industrial</text>
+                <text x="147" y="56" text-anchor="middle" fill="#806010" font-size="7" font-family="IBM Plex Mono">window</text>
+                <!-- Cosine inset -->
+                <rect x="30" y="270" width="290" height="38" rx="2" fill="rgba(80,50,160,0.06)" stroke="#302848" stroke-width="0.5"/>
+                <text x="175" y="282" text-anchor="middle" fill="#604880" font-size="7" font-family="IBM Plex Mono">Cosine emission from target</text>
+                <path d="M60,302 Q80,285 100,302" fill="none" stroke="#00c8e8" stroke-width="1.2" stroke-opacity="0.6"/>
+                <path d="M115,302 Q125,290 135,302" fill="none" stroke="#00a0b8" stroke-width="1" stroke-opacity="0.5"/>
+                <path d="M142,302 Q148,295 154,302" fill="none" stroke="#008090" stroke-width="0.8" stroke-opacity="0.4"/>
+                <text x="175" y="308" text-anchor="middle" fill="#405868" font-size="6.5" font-family="IBM Plex Mono">normal incidence, cosine distribution</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 9: Mean Free Path -->
+        <div class="slide" id="slide-8">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 09</span><span class="sl-sep">/</span><span class="sl-page">Gas Transport</span></div>
+            <div class="sl-title">Mean Free<br><span>Path</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">After ejection, sputtered atoms must travel through the argon gas to reach the substrate. The <em>mean free path (lambda)</em> is the average distance an atom travels before colliding with a gas molecule.</p>
+            <p class="sl-body">If the target-substrate (T-S) distance is much greater than lambda, atoms scatter randomly and the film becomes non-directional, rough, and non-uniform.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">At 5 mTorr Ar and 300 K, the mean free path is approximately 10 mm. A typical research sputter tool has a target-to-substrate distance of 50&ndash;100 mm, placing the process in the moderate-to-high scattering regime. This is why substrate rotation is standard &mdash; it averages out the non-uniform angular flux.</div>
+              <div class="ref-cite">Thornton, J.A. &mdash; J. Vac. Sci. Technol. 11(4), 1974 &mdash; zone model of sputtered film structure.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Kinetic Theory Formula (Ohring Ch.2)</div>
+              <div class="key-box-text">lambda = kT / (sqrt(2) x pi x d^2 x P)<br><br>k = 1.38x10^-23 J/K | T = temperature [K]<br>d = collision diameter ~3.7x10^-10 m (Ar)<br>P = gas pressure [Pa]</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>At 1 mTorr</strong> (0.13 Pa): lambda ~ 5 cm - directional, low-scatter film</li>
+              <li><strong>At 20 mTorr</strong> (2.7 Pa): lambda ~ 0.3 cm - heavy scatter, diffuse film</li>
+              <li>Optimum T-S distance: 1-3x the mean free path</li>
+              <li>High pressure gives better step coverage (conformal) but lower deposition rate</li>
+              <li>Low pressure gives directional deposition, better for deep features (interconnects)</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Scattering vs Pressure</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 380 310" width="380" height="310" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="f7"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <rect x="30" y="30"  width="320" height="14" rx="2" fill="#141828" stroke="#3a5070" stroke-width="0.8"/>
+                <text x="190" y="41" text-anchor="middle" fill="#7090b8" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="2">SUBSTRATE</text>
+                <rect x="30" y="264" width="320" height="14" rx="2" fill="#10141e" stroke="#303848" stroke-width="0.8"/>
+                <text x="190" y="275" text-anchor="middle" fill="#909898" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="2">TARGET</text>
+                <text x="90" y="58" text-anchor="middle" fill="#5c6070" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="1">LOW P</text>
+                <text x="90" y="68" text-anchor="middle" fill="#8a8c98" font-size="7" font-family="IBM Plex Mono">1 mTorr</text>
+                <line x1="90" y1="264" x2="90" y2="44" stroke="#d9b25a" stroke-width="1.2" stroke-opacity="0.5" stroke-dasharray="5,4"/>
+                <circle class="aScat" cx="90" cy="200" r="3.5" fill="#c87828" filter="url(#f7)" style="--sx:0px;--sy:-140px;--dur:2.0s;--del:0.0s;"/>
+                <text x="90" y="135" text-anchor="middle" fill="#6a5820" font-size="7" font-family="IBM Plex Mono">lambda ~ 5 cm</text>
+                <text x="290" y="58" text-anchor="middle" fill="#5c6070" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="1">HIGH P</text>
+                <text x="290" y="68" text-anchor="middle" fill="#8a8c98" font-size="7" font-family="IBM Plex Mono">20 mTorr</text>
+                <circle cx="260" cy="200" r="5" fill="#2a2050" fill-opacity="0.7" stroke="#4a3878" stroke-width="0.7"/><text x="260" y="204" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar</text>
+                <circle cx="300" cy="170" r="5" fill="#2a2050" fill-opacity="0.7" stroke="#4a3878" stroke-width="0.7"/><text x="300" y="174" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar</text>
+                <circle cx="270" cy="140" r="5" fill="#2a2050" fill-opacity="0.7" stroke="#4a3878" stroke-width="0.7"/><text x="270" y="144" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar</text>
+                <circle cx="310" cy="120" r="5" fill="#2a2050" fill-opacity="0.7" stroke="#4a3878" stroke-width="0.7"/><text x="310" y="124" text-anchor="middle" fill="#9090c8" font-size="5.5" font-family="IBM Plex Mono">Ar</text>
+                <path d="M290,264 L290,220 L258,196 L292,168 L267,142 L295,122 L262,96 L285,44" fill="none" stroke="#c87828" stroke-width="1.2" stroke-opacity="0.45" stroke-dasharray="5,4"/>
+                <circle class="aScat" cx="290" cy="200" r="3.5" fill="#c87828" filter="url(#f7)" style="--sx:-28px;--sy:-24px;--dur:1.0s;--del:0.0s;"/>
+                <circle class="aScat" cx="266" cy="142" r="3.5" fill="#c87828" filter="url(#f7)" style="--sx:26px;--sy:-20px;--dur:1.0s;--del:0.33s;"/>
+                <circle class="aScat" cx="292" cy="122" r="3.5" fill="#c87828" filter="url(#f7)" style="--sx:-28px;--sy:-24px;--dur:1.0s;--del:0.66s;"/>
+                <text x="290" y="135" text-anchor="middle" fill="#6a5820" font-size="7" font-family="IBM Plex Mono">lambda ~ 0.3 cm</text>
+                <line x1="190" y1="30" x2="190" y2="264" stroke="#1e2030" stroke-width="1" stroke-dasharray="3,5"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 10: Film Uniformity -->
+        <div class="slide" id="slide-9">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 10</span><span class="sl-sep">/</span><span class="sl-page">Deposition</span></div>
+            <div class="sl-title">Film<br><span>Uniformity</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">Film <em>thickness uniformity</em> across the substrate is critical for device yield. A non-uniform film means different resistance, optical properties, and mechanical stress across the wafer - leading to die-to-die variation and yield loss.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">Semiconductor fabs specify film thickness uniformity at &plusmn;1&ndash;2% across a 300 mm wafer. Achieving this with a 3-inch target requires substrate rotation, carefully optimised target-to-substrate distance, and sometimes a physical shadow mask to trim the edge flux.</div>
+              <div class="ref-cite">Rossnagel, S.M. &mdash; J. Vac. Sci. Technol. A 21(5), 2003 &mdash; review of film thickness uniformity.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Non-Uniformity Metric</div>
+              <div class="key-box-text">NU% = (t_max - t_min) / (2 x t_avg) x 100%<br><br>Target for IC manufacturing: NU% &lt; 5%<br>High-end processes: NU% &lt; 1%<br><br>Improved by: substrate rotation, T-S distance,<br>target size, collimation</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>Cosine distribution</strong> from target naturally creates centre-thick profile</li>
+              <li><strong>Substrate rotation</strong> averages out azimuthal non-uniformity significantly</li>
+              <li><strong>Longer T-S distance</strong> improves uniformity but reduces deposition rate and directionality</li>
+              <li><strong>Collimation</strong> (physical honeycomb filter): blocks off-axis atoms, improves step coverage in high-aspect-ratio features, at cost of reduced rate</li>
+              <li><strong>Ionised PVD</strong>: ionises sputtered atoms, accelerates them perpendicular to substrate for conformal coverage of deep features - used for Cu/Ta barrier layers in semiconductor</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Uniformity Profiles & Collimation</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 320" width="360" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="uf1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- No rotation profile -->
+                <text x="90"  y="22" text-anchor="middle" fill="#aab3c0" font-size="7.5" font-family="IBM Plex Mono">No Rotation</text>
+                <rect x="30" y="30" width="120" height="8" rx="1" fill="#141828" stroke="#3a5070" stroke-width="0.7"/>
+                <rect x="50" y="22" width="80" height="8" rx="1" fill="rgba(0,180,220,0.55)" stroke="rgba(0,210,255,0.3)" stroke-width="0.5"/>
+                <rect x="58" y="16" width="64" height="6" rx="1" fill="rgba(0,160,200,0.40)" stroke="rgba(0,200,240,0.2)" stroke-width="0.5"/>
+                <rect x="64" y="12" width="52" height="4" rx="1" fill="rgba(0,140,180,0.30)"/>
+                <text x="90" y="52" text-anchor="middle" fill="#406070" font-size="7" font-family="IBM Plex Mono">centre-thick NU&gt;10%</text>
+                <!-- With rotation -->
+                <text x="270" y="22" text-anchor="middle" fill="#aab3c0" font-size="7.5" font-family="IBM Plex Mono">With Rotation</text>
+                <rect x="210" y="30" width="120" height="8" rx="1" fill="#141828" stroke="#3a5070" stroke-width="0.7"/>
+                <rect x="214" y="22" width="112" height="8" rx="1" fill="rgba(0,180,220,0.55)" stroke="rgba(0,210,255,0.3)" stroke-width="0.5"/>
+                <rect x="218" y="16" width="104" height="6" rx="1" fill="rgba(0,160,200,0.42)" stroke="rgba(0,200,240,0.2)" stroke-width="0.5"/>
+                <text x="270" y="52" text-anchor="middle" fill="#00a8c8" font-size="7" font-family="IBM Plex Mono">uniform NU&lt;3%</text>
+                <!-- T-S distance effect -->
+                <text x="180" y="82" text-anchor="middle" fill="#667081" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="1">COLLIMATION (Simon 4.6.3)</text>
+                <rect x="30"  y="90" width="300" height="8" rx="1" fill="#1a2030" stroke="#304050" stroke-width="0.7"/>
+                <text x="35" y="99" fill="#506080" font-size="6" font-family="IBM Plex Mono">magnetron target</text>
+                <!-- Uncollimated flux -->
+                <line x1="90" y1="98" x2="60"  y2="160" stroke="#c87828" stroke-width="0.8" stroke-opacity="0.4"/>
+                <line x1="90" y1="98" x2="90"  y2="160" stroke="#c87828" stroke-width="1"   stroke-opacity="0.5"/>
+                <line x1="90" y1="98" x2="120" y2="160" stroke="#c87828" stroke-width="0.8" stroke-opacity="0.4"/>
+                <line x1="90" y1="98" x2="40"  y2="160" stroke="#c87828" stroke-width="0.5" stroke-opacity="0.25"/>
+                <line x1="90" y1="98" x2="140" y2="160" stroke="#c87828" stroke-width="0.5" stroke-opacity="0.25"/>
+                <text x="90" y="175" text-anchor="middle" fill="#806020" font-size="7" font-family="IBM Plex Mono">uncollimated</text>
+                <!-- Collimator -->
+                <rect x="210" y="118" width="120" height="10" rx="1" fill="#1a2535" stroke="#405070" stroke-width="0.7"/>
+                <line x1="230" y1="118" x2="230" y2="128" stroke="#303848" stroke-width="1"/>
+                <line x1="250" y1="118" x2="250" y2="128" stroke="#303848" stroke-width="1"/>
+                <line x1="270" y1="118" x2="270" y2="128" stroke="#303848" stroke-width="1"/>
+                <line x1="290" y1="118" x2="290" y2="128" stroke="#303848" stroke-width="1"/>
+                <line x1="310" y1="118" x2="310" y2="128" stroke="#303848" stroke-width="1"/>
+                <text x="270" y="114" text-anchor="middle" fill="#405060" font-size="6.5" font-family="IBM Plex Mono">collimator</text>
+                <line x1="270" y1="98" x2="250" y2="118" stroke="#c87828" stroke-width="0.5" stroke-opacity="0.2"/>
+                <line x1="270" y1="98" x2="270" y2="118" stroke="#c87828" stroke-width="1" stroke-opacity="0.5"/>
+                <line x1="270" y1="98" x2="290" y2="118" stroke="#c87828" stroke-width="0.5" stroke-opacity="0.2"/>
+                <line x1="270" y1="128" x2="270" y2="160" stroke="#00c8e8" stroke-width="1.5" stroke-opacity="0.7"/>
+                <text x="270" y="175" text-anchor="middle" fill="#00a8c8" font-size="7" font-family="IBM Plex Mono">collimated</text>
+                <!-- Feature fill inset -->
+                <text x="180" y="200" text-anchor="middle" fill="#667081" font-size="7" font-family="IBM Plex Mono" letter-spacing="1">HIGH ASPECT-RATIO FEATURE FILL</text>
+                <rect x="130" y="208" width="40" height="50" rx="1" fill="#0a0e18" stroke="#202838" stroke-width="0.7"/>
+                <rect x="138" y="240" width="24" height="18" rx="0" fill="rgba(180,120,30,0.4)" stroke="#a07020" stroke-width="0.5"/>
+                <rect x="130" y="208" width="6"  height="50" rx="0" fill="rgba(180,120,30,0.25)" stroke="none"/>
+                <rect x="164" y="208" width="6"  height="50" rx="0" fill="rgba(180,120,30,0.25)" stroke="none"/>
+                <text x="150" y="272" text-anchor="middle" fill="#806020" font-size="6.5" font-family="IBM Plex Mono">poor</text>
+                <rect x="190" y="208" width="40" height="50" rx="1" fill="#0a0e18" stroke="#202838" stroke-width="0.7"/>
+                <rect x="190" y="208" width="40" height="50" rx="0" fill="rgba(0,160,200,0.12)" stroke="none"/>
+                <rect x="190" y="208" width="5"  height="50" rx="0" fill="rgba(0,160,200,0.45)"/>
+                <rect x="225" y="208" width="5"  height="50" rx="0" fill="rgba(0,160,200,0.45)"/>
+                <rect x="195" y="253" width="30" height="5"  rx="0" fill="rgba(0,160,200,0.45)"/>
+                <text x="210" y="272" text-anchor="middle" fill="#00a8c8" font-size="6.5" font-family="IBM Plex Mono">iPVD</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 11: Reactive Sputtering -->
+        <div class="slide" id="slide-10">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 11</span><span class="sl-sep">/</span><span class="sl-page">TiN / Hysteresis</span></div>
+            <div class="sl-title">Reactive<br><span>Sputtering</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">Instead of sputtering a compound target, <em>reactive sputtering</em> deposits a pure metal target (Ti, Al, Ta) and flows a reactive gas (N2, O2) into the chamber. The sputtered metal atoms react at the substrate to form the desired compound film.</p>
+            <p class="sl-body">This gives precise stoichiometry control - adjusting the reactive gas flow directly changes the film composition. TiN is the classic example: gold-coloured, extremely hard, used as a diffusion barrier in every modern CPU.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">The classic hysteresis experiment by Berg et al. on Ti in Ar/N2 shows that as N2 flow increases the deposition rate stays near the metallic value until a critical flow, then drops abruptly by 60&ndash;80% as the target transitions to TiN mode. Recovering the metallic rate requires reducing N2 well below that critical point &mdash; the loop does not retrace itself.</div>
+              <div class="ref-cite">Berg et al. &mdash; J. Appl. Phys. 63(3), 1988 &mdash; hysteresis in reactive sputtering.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Hysteresis Behaviour (Simon 4.5)</div>
+              <div class="key-box-text">Low N2 flow -> metallic mode: high rate, low V<br>At transition point A -> target poisons abruptly<br>High N2 flow -> reactive mode: low rate, high V<br><br>Reducing N2 does NOT immediately recover -<br>must sputter-clean the target surface first<br>This history-dependence = hysteresis</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li>Common reactive films: TiN (barrier), TaN (barrier), Al2O3 (dielectric), SiO2 (optical)</li>
+              <li>Target poisoning: reactive gas forms insulating layer on target surface - must manage carefully</li>
+              <li>Operating in the transition zone is unstable - feedback gas-flow control is required</li>
+              <li>The O2/Ar slider in this simulator models the reactive gas proportion</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Reactive Sputtering Hysteresis Curve</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 320" width="360" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="rf1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Axes for deposition rate -->
+                <text x="180" y="18" text-anchor="middle" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono" letter-spacing="1">DEPOSITION RATE vs N2 FLOW</text>
+                <line x1="40" y1="140" x2="320" y2="140" stroke="#303848" stroke-width="1"/>
+                <line x1="40" y1="30"  x2="40"  y2="140" stroke="#303848" stroke-width="1"/>
+                <text x="20" y="90" text-anchor="middle" fill="#667081" font-size="7.5" font-family="IBM Plex Mono" transform="rotate(-90,20,90)">Deposition Rate</text>
+                <text x="180" y="157" text-anchor="middle" fill="#667081" font-size="7.5" font-family="IBM Plex Mono">N2 reactive gas flow</text>
+                <!-- Metallic mode (high rate) going up -->
+                <path d="M40,55 Q100,52 140,50" fill="none" stroke="#d9b25a" stroke-width="2"/>
+                <!-- Abrupt drop at A -->
+                <line x1="140" y1="50" x2="160" y2="120" stroke="#d9b25a" stroke-width="2"/>
+                <!-- Reactive mode (low rate) -->
+                <path d="M160,120 Q220,122 320,125" fill="none" stroke="#d9b25a" stroke-width="2"/>
+                <!-- Return path (hysteresis) -->
+                <path d="M160,120 Q120,118 90,115 L70,55" fill="none" stroke="#e86040" stroke-width="1.5" stroke-dasharray="5,3"/>
+                <!-- Labels -->
+                <text x="90"  y="44"  fill="#a07820" font-size="8" font-family="IBM Plex Mono">metallic mode</text>
+                <text x="200" y="114" fill="#a07820" font-size="8" font-family="IBM Plex Mono">reactive mode</text>
+                <circle cx="140" cy="50"  r="5" fill="#d9b25a" filter="url(#rf1)"/>
+                <text x="140"  y="42"  text-anchor="middle" fill="#d9b25a" font-size="8" font-family="IBM Plex Mono">A</text>
+                <circle cx="160" cy="120" r="5" fill="#d9b25a" filter="url(#rf1)"/>
+                <text x="167"  y="128" fill="#d9b25a" font-size="8" font-family="IBM Plex Mono">B</text>
+                <circle cx="70"  cy="55"  r="4" fill="#e86040" filter="url(#rf1)"/>
+                <text x="60"   y="50"  fill="#e86040" font-size="8" font-family="IBM Plex Mono">C</text>
+                <text x="110" y="100" fill="#e86040" font-size="7" font-family="IBM Plex Mono">return path</text>
+                <text x="110" y="110" fill="#e86040" font-size="7" font-family="IBM Plex Mono">  (hysteresis)</text>
+                <!-- Separator line -->
+                <line x1="40" y1="170" x2="320" y2="170" stroke="#252e40" stroke-width="0.8"/>
+                <!-- TiN film diagram -->
+                <text x="180" y="188" text-anchor="middle" fill="#aab3c0" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="1">TiN FILM CROSS-SECTION</text>
+                <rect x="60"  y="196" width="240" height="30" rx="2" fill="#0a0e18" stroke="#202838" stroke-width="0.8"/>
+                <text x="180" y="215" text-anchor="middle" fill="#303848" font-size="7" font-family="IBM Plex Mono">Si substrate</text>
+                <rect x="60"  y="186" width="240" height="10" rx="1" fill="rgba(0,160,200,0.4)" stroke="#00a0d0" stroke-width="0.6"/>
+                <text x="180" y="194" text-anchor="middle" fill="#0090b0" font-size="6" font-family="IBM Plex Mono">Ta barrier (3 nm)</text>
+                <rect x="60"  y="176" width="240" height="10" rx="1" fill="rgba(200,160,30,0.6)" stroke="#c0a020" stroke-width="0.7"/>
+                <text x="180" y="183" text-anchor="middle" fill="#a08010" font-size="6" font-family="IBM Plex Mono">TiN barrier (10 nm)</text>
+                <!-- Applications -->
+                <rect x="40" y="240" width="280" height="60" rx="2" fill="rgba(212,168,71,0.04)" stroke="rgba(212,168,71,0.12)" stroke-width="0.5"/>
+                <text x="50" y="256" fill="#806010" font-size="7.5" font-family="IBM Plex Mono">Reactive sputtering applications:</text>
+                <text x="50" y="270" fill="#605010" font-size="7" font-family="IBM Plex Mono">TiN - barrier, hard coating (drill bits, yellow colour)</text>
+                <text x="50" y="282" fill="#605010" font-size="7" font-family="IBM Plex Mono">TaN - Cu interconnect barrier (lower resistivity)</text>
+                <text x="50" y="294" fill="#605010" font-size="7" font-family="IBM Plex Mono">Al2O3 - optical coatings, wear protection</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 12: Co-Sputtering -->
+        <div class="slide" id="slide-11">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 12</span><span class="sl-sep">/</span><span class="sl-page">Multi-Gun</span></div>
+            <div class="sl-title">Co-<br><span>Sputtering</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body"><em>Co-sputtering</em> uses <strong>multiple targets simultaneously</strong> - each bombarded by independent guns. Atoms from different materials mix during transport and co-deposit, forming <em>alloy thin films</em> with tunable composition.</p>
+            <p class="sl-body">By adjusting individual gun power, you control the <strong>atomic ratio</strong> in the film - enabling the deposition of complex multi-element alloys, oxides, and nitrides.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">Indium tin oxide (ITO) &mdash; the transparent conductor in most flat-panel displays and touch screens &mdash; is deposited by co-sputtering In₂O₃ and SnO₂ targets in an Ar/O₂ atmosphere. The 90:10 In:Sn composition that gives optimal conductivity and transparency is controlled by the relative power settings of the two guns.</div>
+              <div class="ref-cite">Minami, T. &mdash; Semicond. Sci. Technol. 20(4), 2005 &mdash; transparent conducting oxides.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Composition Control</div>
+              <div class="key-box-text">Film at% ~ (Y1 x P1) / Sum(Yi x Pi) x 100%<br><br>Y = yield | P = power per gun<br>This simulator supports 3 independent guns:<br>Cu + Al + Zn (or any combination)</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li>Used to deposit: CuAlZn alloys, ITO (In+Sn), NiCr heating films</li>
+              <li>Real-time yield display per gun helps tune target composition</li>
+              <li>DC and RF modes can be mixed across different guns</li>
+              <li>Mn minority additions to Cu seed layers help form self-forming barriers in advanced interconnects (Simon 4.8)</li>
+            </ul>
+          </div>
+          <div class="sl-diagram" style="display:flex;flex-direction:column;">
+            <div class="sl-diagram-header">3-Gun Co-Sputtering</div>
+            <div class="sl-diagram-body" style="flex:1;">
+              <svg viewBox="0 0 380 300" width="380" height="300" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <filter id="f9"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  <radialGradient id="pg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#7040b0" stop-opacity="0.4"/><stop offset="100%" stop-color="#7040b0" stop-opacity="0"/></radialGradient>
+                  <radialGradient id="pg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#b04030" stop-opacity="0.4"/><stop offset="100%" stop-color="#b04030" stop-opacity="0"/></radialGradient>
+                  <radialGradient id="pg3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#3070b0" stop-opacity="0.4"/><stop offset="100%" stop-color="#3070b0" stop-opacity="0"/></radialGradient>
+                </defs>
+                <rect x="30" y="22" width="320" height="14" rx="2" fill="#141828" stroke="#3a5070" stroke-width="0.8"/>
+                <text x="190" y="33" text-anchor="middle" fill="#7090b8" font-size="7" font-family="IBM Plex Mono" letter-spacing="2">SUBSTRATE - ALLOY FILM</text>
+                <circle class="aScat" cx="120" cy="36" r="3" fill="#d9b25a" filter="url(#f9)" style="--sx:0px;--sy:-20px;--dur:1.5s;--del:0.0s;"/>
+                <circle class="aScat" cx="160" cy="36" r="3" fill="#e86040" filter="url(#f9)" style="--sx:0px;--sy:-20px;--dur:1.5s;--del:0.2s;"/>
+                <circle class="aScat" cx="200" cy="36" r="3" fill="#4080d0" filter="url(#f9)" style="--sx:0px;--sy:-20px;--dur:1.5s;--del:0.4s;"/>
+                <circle class="aScat" cx="240" cy="36" r="3" fill="#d9b25a" filter="url(#f9)" style="--sx:0px;--sy:-20px;--dur:1.5s;--del:0.6s;"/>
+                <circle class="aScat" cx="280" cy="36" r="3" fill="#e86040" filter="url(#f9)" style="--sx:0px;--sy:-20px;--dur:1.5s;--del:0.8s;"/>
+                <circle class="aPulse" cx="80"  cy="195" r="22" fill="url(#pg1)"/>
+                <ellipse class="aRace"  cx="80"  cy="207" rx="26" ry="5" fill="none" stroke="#8050c0" stroke-width="1.8" filter="url(#f9)"/>
+                <rect x="50" y="210" width="60" height="13" rx="2" fill="#10141e" stroke="#303848" stroke-width="0.7"/>
+                <text x="80" y="220" text-anchor="middle" fill="#7040a0" font-size="7" font-family="IBM Plex Mono">GUN 1 - Cu</text>
+                <circle class="aScat" cx="80" cy="205" r="3" fill="#d9b25a" filter="url(#f9)" style="--sx:40px;--sy:-120px;--dur:1.6s;--del:0.0s;"/>
+                <circle class="aScat" cx="80" cy="205" r="2.5" fill="#c87828" filter="url(#f9)" style="--sx:55px;--sy:-140px;--dur:1.8s;--del:0.5s;"/>
+                <circle class="aPulse" cx="190" cy="210" r="22" fill="url(#pg2)"/>
+                <ellipse class="aRace"  cx="190" cy="222" rx="26" ry="5" fill="none" stroke="#c04030" stroke-width="1.8" filter="url(#f9)"/>
+                <rect x="160" y="225" width="60" height="13" rx="2" fill="#10141e" stroke="#303848" stroke-width="0.7"/>
+                <text x="190" y="235" text-anchor="middle" fill="#c04030" font-size="7" font-family="IBM Plex Mono">GUN 2 - Al</text>
+                <circle class="aScat" cx="190" cy="220" r="3" fill="#e86040" filter="url(#f9)" style="--sx:0px;--sy:-150px;--dur:1.5s;--del:0.0s;"/>
+                <circle class="aScat" cx="190" cy="220" r="2.5" fill="#d08040" filter="url(#f9)" style="--sx:-10px;--sy:-160px;--dur:1.7s;--del:0.5s;"/>
+                <circle class="aPulse" cx="300" cy="195" r="22" fill="url(#pg3)"/>
+                <ellipse class="aRace"  cx="300" cy="207" rx="26" ry="5" fill="none" stroke="#3070b0" stroke-width="1.8" filter="url(#f9)"/>
+                <rect x="270" y="210" width="60" height="13" rx="2" fill="#10141e" stroke="#303848" stroke-width="0.7"/>
+                <text x="300" y="220" text-anchor="middle" fill="#3070b0" font-size="7" font-family="IBM Plex Mono">GUN 3 - Zn</text>
+                <circle class="aScat" cx="300" cy="205" r="3" fill="#4080d0" filter="url(#f9)" style="--sx:-40px;--sy:-120px;--dur:1.6s;--del:0.0s;"/>
+                <circle class="aScat" cx="300" cy="205" r="2.5" fill="#3070b8" filter="url(#f9)" style="--sx:-55px;--sy:-140px;--dur:1.8s;--del:0.5s;"/>
+                <text x="190" y="165" text-anchor="middle" fill="#6a6c74" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">ATOM MIXING IN TRANSPORT</text>
+                <text x="80"  y="258" text-anchor="middle" fill="#7a6898" font-size="7.5" font-family="IBM Plex Mono">300W - DC</text>
+                <text x="190" y="258" text-anchor="middle" fill="#7a6070" font-size="7.5" font-family="IBM Plex Mono">200W - RF</text>
+                <text x="300" y="258" text-anchor="middle" fill="#5a6878" font-size="7.5" font-family="IBM Plex Mono">200W - RF</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 13: Film Growth Modes -->
+        <div class="slide" id="slide-12">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 13</span><span class="sl-sep">/</span><span class="sl-page">FM / VW / SK</span></div>
+            <div class="sl-title">Film Growth<br><span>Modes</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">When sputtered atoms land on the substrate, they don't all behave the same way. Depending on <em>surface energy</em>, <em>temperature</em>, and <em>lattice mismatch</em>, three distinct growth modes emerge - each producing a fundamentally different film morphology.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">STM images of Fe deposited on Au(111) at room temperature show classic Volmer-Weber island growth &mdash; isolated 3D clusters form and only coalesce into a continuous film above 5&ndash;8 monolayers. The same Fe on an Fe(100) substrate grows layer-by-layer (Frank-van der Merwe) because the lattice mismatch is zero.</div>
+              <div class="ref-cite">Bauer, E. &mdash; Z. Kristallogr. 110, 1958 &mdash; original classification of epitaxial growth modes.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Controlling Parameters (Ohring Ch.5)</div>
+              <div class="key-box-text">Surface mobility ~ Temperature<br>Critical thickness ~ 1 / Lattice mismatch<br><br>High T + low mismatch -> Frank-van der Merwe<br>Low T + low mismatch -> Volmer-Weber<br>Any T + high mismatch (>7%) -> Stranski-Krastanov</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>FM</strong> - epitaxial semiconductor layers: Si/Ge, GaAs on GaAs</li>
+              <li><strong>VW</strong> - metals on oxide substrates: Au on SiO2, Ag on glass</li>
+              <li><strong>SK</strong> - quantum dot growth: InAs on GaAs (7% mismatch)</li>
+              <li>Select mode in the simulator via the Growth Mode dropdown in GEO-301 panel</li>
+              <li>Lattice mismatch slider controls the SK critical thickness transition</li>
+            </ul>
+          </div>
+          <div class="sl-diagram" style="display:flex;flex-direction:column;gap:0;">
+            <div class="sl-diagram-header">Three Growth Modes</div>
+            <div class="sl-diagram-body" style="flex:1;display:flex;flex-direction:column;gap:10px;padding:14px 12px;overflow-y:auto;">
+              <div style="background:rgba(0,210,255,0.04);border:1px solid rgba(0,210,255,0.18);border-radius:4px;padding:10px 14px;">
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:#00c8e8;margin-bottom:6px;">01 - FRANK-VAN DER MERWE - LAYER BY LAYER</div>
+                <svg viewBox="0 0 320 62" width="100%" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="10" y="50" width="300" height="8" rx="1" fill="#0a1828" stroke="#304060" stroke-width="0.7"/>
+                  <rect x="10" y="41" width="300" height="8" rx="1" fill="rgba(0,180,220,0.55)" stroke="rgba(0,210,255,0.3)" stroke-width="0.5"/>
+                  <rect x="10" y="33" width="300" height="7" rx="1" fill="rgba(0,160,200,0.38)" stroke="rgba(0,200,240,0.2)" stroke-width="0.5"/>
+                  <rect x="10" y="26" width="190" height="7" rx="1" fill="rgba(0,140,180,0.28)" stroke="rgba(0,190,230,0.15)" stroke-width="0.5"/>
+                  <circle class="aScat" cx="60"  cy="10" r="2.5" fill="#00c8e8" style="--sx:0px;--sy:15px;--dur:1.4s;--del:0.0s;"/>
+                  <circle class="aScat" cx="120" cy="10" r="2.5" fill="#00c8e8" style="--sx:0px;--sy:15px;--dur:1.4s;--del:0.3s;"/>
+                  <circle class="aScat" cx="200" cy="10" r="2.5" fill="#00c8e8" style="--sx:0px;--sy:15px;--dur:1.4s;--del:0.6s;"/>
+                  <circle class="aScat" cx="270" cy="10" r="2.5" fill="#00c8e8" style="--sx:0px;--sy:15px;--dur:1.4s;--del:0.9s;"/>
+                  <text x="310" y="47" text-anchor="end" fill="#00a8c8" font-size="6" font-family="IBM Plex Mono">uniform</text>
+                </svg>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--g1);line-height:1.6;margin-top:3px;">High mobility - fills entire surface before next layer. <strong style="color:#00c8e8;">Atomically flat, epitaxial.</strong></div>
+              </div>
+              <div style="background:rgba(232,130,40,0.04);border:1px solid rgba(232,130,40,0.2);border-radius:4px;padding:10px 14px;">
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:#e08030;margin-bottom:6px;">02 - VOLMER-WEBER - ISLAND GROWTH</div>
+                <svg viewBox="0 0 320 62" width="100%" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="10" y="50" width="300" height="8" rx="1" fill="#0a1828" stroke="#303848" stroke-width="0.7"/>
+                  <rect x="18"  y="32" width="30" height="18" rx="2" fill="rgba(220,120,30,0.65)" stroke="rgba(240,150,50,0.4)" stroke-width="0.5"/>
+                  <rect x="68"  y="40" width="22" height="10" rx="2" fill="rgba(210,110,25,0.5)"  stroke="rgba(230,140,45,0.3)" stroke-width="0.5"/>
+                  <rect x="118" y="26" width="38" height="24" rx="2" fill="rgba(230,130,35,0.72)" stroke="rgba(250,160,55,0.45)" stroke-width="0.5"/>
+                  <rect x="178" y="40" width="18" height="10" rx="2" fill="rgba(200,100,20,0.45)" stroke="rgba(220,130,40,0.3)" stroke-width="0.5"/>
+                  <rect x="218" y="34" width="32" height="16" rx="2" fill="rgba(225,125,32,0.60)" stroke="rgba(245,155,52,0.38)" stroke-width="0.5"/>
+                  <rect x="270" y="44" width="20" height="6"  rx="2" fill="rgba(195,95,18,0.42)"  stroke="rgba(215,125,38,0.28)" stroke-width="0.5"/>
+                  <circle class="aScat" cx="37"  cy="10" r="2.5" fill="#e08840" style="--sx:0px;--sy:20px;--dur:1.6s;--del:0.0s;"/>
+                  <circle class="aScat" cx="137" cy="10" r="2.5" fill="#e08840" style="--sx:0px;--sy:14px;--dur:1.6s;--del:0.4s;"/>
+                  <circle class="aScat" cx="234" cy="10" r="2.5" fill="#e08840" style="--sx:0px;--sy:22px;--dur:1.6s;--del:0.8s;"/>
+                  <text x="310" y="47" text-anchor="end" fill="#c06820" font-size="6" font-family="IBM Plex Mono">islands</text>
+                </svg>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--g1);line-height:1.6;margin-top:3px;">Atoms prefer bonding to each other. Random 3D islands nucleate. <strong style="color:#e08030;">Rough, granular films.</strong></div>
+              </div>
+              <div style="background:rgba(212,168,71,0.04);border:1px solid rgba(212,168,71,0.2);border-radius:4px;padding:10px 14px;">
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:#c8a040;margin-bottom:6px;">03 - STRANSKI-KRASTANOV - LAYER THEN ISLANDS</div>
+                <svg viewBox="0 0 320 66" width="100%" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="10" y="54" width="300" height="8" rx="1" fill="#0a1828" stroke="#303840" stroke-width="0.7"/>
+                  <rect x="10" y="45" width="300" height="8"  rx="1" fill="rgba(0,180,220,0.45)" stroke="rgba(0,210,255,0.25)" stroke-width="0.5"/>
+                  <rect x="10" y="37" width="300" height="7"  rx="1" fill="rgba(0,155,195,0.30)" stroke="rgba(0,190,235,0.15)" stroke-width="0.5"/>
+                  <rect x="22"  y="20" width="34" height="17" rx="2" fill="rgba(200,155,30,0.65)" stroke="rgba(220,175,50,0.4)" stroke-width="0.5"/>
+                  <rect x="90" y="14" width="46" height="23" rx="2" fill="rgba(210,165,35,0.72)" stroke="rgba(230,185,55,0.45)" stroke-width="0.5"/>
+                  <rect x="180" y="22" width="32" height="15" rx="2" fill="rgba(195,150,28,0.58)" stroke="rgba(215,170,48,0.36)" stroke-width="0.5"/>
+                  <rect x="246" y="26" width="42" height="11" rx="2" fill="rgba(188,143,24,0.50)" stroke="rgba(208,163,44,0.32)" stroke-width="0.5"/>
+                  <circle class="aScat" cx="39"  cy="8" r="2.5" fill="#c8a040" style="--sx:0px;--sy:10px;--dur:1.5s;--del:0.0s;"/>
+                  <circle class="aScat" cx="113" cy="8" r="2.5" fill="#c8a040" style="--sx:0px;--sy:6px;--dur:1.5s;--del:0.5s;"/>
+                  <circle class="aScat" cx="196" cy="8" r="2.5" fill="#c8a040" style="--sx:0px;--sy:12px;--dur:1.5s;--del:1.0s;"/>
+                  <text x="310" y="47" text-anchor="end" fill="#a07820" font-size="6" font-family="IBM Plex Mono">SK</text>
+                </svg>
+                <div style="font-family:var(--sans);font-size:10px;color:var(--g1);line-height:1.6;margin-top:3px;">Flat wetting layers first, then strain drives island nucleation. <strong style="color:#c8a040;">Quantum dots (InAs/GaAs).</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 14: Film Characterisation -->
+        <div class="slide" id="slide-13">
+          <div class="sl-text">
+            <div class="sl-eyebrow"><span class="sl-chapter">Chapter 14</span><span class="sl-sep">/</span><span class="sl-page">Metrology</span></div>
+            <div class="sl-title">Film<br><span>Characterisation</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">After deposition, the film must be <em>measured and verified</em>. Thickness, resistivity, uniformity, and composition are all critical parameters that determine whether a film meets specification.</p>
+            <div class="ref-callout">
+              <div class="ref-label">Real-world reference</div>
+              <div class="ref-body">A 100 nm Cu film deposited at 5 mTorr with a deposition rate of 1 nm/s can be fully characterised in under two hours: XRR gives thickness and density, XRD gives grain size and texture, four-point probe gives sheet resistance, and a profilometer step scan gives thickness at the film edge. These four measurements together define the process window.</div>
+              <div class="ref-cite">Birkholz, M. &mdash; Thin Film Analysis by X-Ray Scattering, Wiley-VCH, 2006.</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Four-Point Probe (Simon 4.7)</div>
+              <div class="key-box-text">R_sheet = 4.532 x V / I [ohm/square]<br><br>Outer probes: current source<br>Inner probes: voltage measurement<br>Thickness = rho_bulk / R_sheet<br>Probe spacing: 0.5-2.0 mm typical</div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Model Foundations — Why These Names Appear</div>
+              <div class="key-box-text">Yamamura and Bohdansky provide semi-empirical sputtering-yield trends that relate ion energy, threshold energy, and target binding energy to the number of atoms ejected from the target.<br><br>In this simulator, those models are used in reduced-order form so students can see realistic yield trends in real time without requiring a full atomistic collision simulation.</div>
+            </div>            <ul class="fact-list">
+              <li><strong>Four-point probe:</strong> sheet resistance -> film thickness (if rho is known). Cannot be used on films <50 nm (probe punches through)</li>
+              <li><strong>XRF (X-ray fluorescence):</strong> counts characteristic X-ray photons per element for direct thickness of metals and alloys. No modelling required</li>
+              <li><strong>XRR (X-ray reflectance):</strong> measures interference fringes for thickness, roughness, and density of multilayer stacks</li>
+              <li><strong>Picosecond ultrasound:</strong> laser pulse generates acoustic wave; film thickness comes from echo time-of-flight</li>
+              <li><strong>SEM/TEM cross-section:</strong> direct visual confirmation of thickness and microstructure - used to calibrate other techniques</li>
+              <li>This simulator reports: Avg Deposition Rate, Uniformity %, Centre Thickness, Edge Ratio - all mirroring real metrology outputs</li>
+            </ul>
+          </div>
+          <div class="sl-diagram">
+            <div class="sl-diagram-header">Metrology Techniques</div>
+            <div class="sl-diagram-body">
+              <svg viewBox="0 0 360 320" width="360" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs><filter id="mef1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <!-- Four-point probe -->
+                <text x="180" y="20" text-anchor="middle" fill="#aab3c0" font-size="8" font-family="IBM Plex Mono" letter-spacing="2">FOUR-POINT PROBE</text>
+                <rect x="40" y="70" width="280" height="12" rx="1" fill="rgba(180,120,30,0.3)" stroke="#a07020" stroke-width="0.7"/>
+                <text x="50" y="80" fill="#806010" font-size="6.5" font-family="IBM Plex Mono">metal film (100-500 nm)</text>
+                <rect x="40" y="82" width="280" height="20" rx="1" fill="#0a0e18" stroke="#202838" stroke-width="0.7"/>
+                <text x="180" y="96" text-anchor="middle" fill="#303848" font-size="7" font-family="IBM Plex Mono">substrate</text>
+                <!-- Probe tips -->
+                <line x1="90"  y1="30" x2="90"  y2="70" stroke="#d0d6df" stroke-width="1.5"/>
+                <line x1="130" y1="30" x2="130" y2="70" stroke="#d0d6df" stroke-width="1.5"/>
+                <line x1="170" y1="30" x2="170" y2="70" stroke="#d0d6df" stroke-width="1.5"/>
+                <line x1="210" y1="30" x2="210" y2="70" stroke="#d0d6df" stroke-width="1.5"/>
+                <circle cx="90"  cy="30" r="4" fill="#a0a8b8"/>
+                <circle cx="130" cy="30" r="4" fill="#a0a8b8"/>
+                <circle cx="170" cy="30" r="4" fill="#a0a8b8"/>
+                <circle cx="210" cy="30" r="4" fill="#a0a8b8"/>
+                <!-- Current arrows -->
+                <text x="72"  y="26" text-anchor="middle" fill="#d9b25a" font-size="8" font-family="IBM Plex Mono">I0</text>
+                <text x="228" y="26" text-anchor="middle" fill="#d9b25a" font-size="8" font-family="IBM Plex Mono">dI</text>
+                <!-- Voltage measurement -->
+                <text x="150" y="25" text-anchor="middle" fill="#00c8e8" font-size="7.5" font-family="IBM Plex Mono">V</text>
+                <line x1="130" y1="22" x2="170" y2="22" stroke="#00c8e8" stroke-width="1" stroke-dasharray="2,2"/>
+                <!-- Current flow in film -->
+                <path d="M90,76 Q150,60 210,76" fill="none" stroke="#d9b25a" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="3,3"/>
+                <!-- XRF block -->
+                <text x="180" y="126" text-anchor="middle" fill="#667081" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="1">XRF | XRR | PICOSECOND ULTRASOUND</text>
+                <!-- XRF -->
+                <rect x="30"  y="136" width="86" height="60" rx="2" fill="#0a0e18" stroke="#202030" stroke-width="0.7"/>
+                <text x="73"  y="150" text-anchor="middle" fill="#606870" font-size="7" font-family="IBM Plex Mono">X-Ray</text>
+                <text x="73"  y="160" text-anchor="middle" fill="#606870" font-size="7" font-family="IBM Plex Mono">Fluorescence</text>
+                <line x1="73" y1="164" x2="73" y2="186" stroke="#e86040" stroke-width="1.5" stroke-opacity="0.6"/>
+                <rect x="50" y="186" width="46" height="6" rx="1" fill="rgba(180,120,30,0.4)" stroke="#a07020" stroke-width="0.5"/>
+                <line x1="73" y1="192" x2="95" y2="175" stroke="#c87828" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="2,2"/>
+                <text x="73"  y="204" text-anchor="middle" fill="#806040" font-size="6.5" font-family="IBM Plex Mono">counts to nm</text>
+                <!-- XRR -->
+                <rect x="136" y="136" width="88" height="60" rx="2" fill="#0a0e18" stroke="#202030" stroke-width="0.7"/>
+                <text x="180" y="150" text-anchor="middle" fill="#606870" font-size="7" font-family="IBM Plex Mono">X-Ray</text>
+                <text x="180" y="160" text-anchor="middle" fill="#606870" font-size="7" font-family="IBM Plex Mono">Reflectance</text>
+                <path d="M145,185 Q160,175 180,178 Q200,181 215,172" fill="none" stroke="#4080d0" stroke-width="1.2" stroke-opacity="0.7"/>
+                <text x="180" y="204" text-anchor="middle" fill="#305890" font-size="6.5" font-family="IBM Plex Mono">fringes to t, rho</text>
+                <!-- Picosecond -->
+                <rect x="244" y="136" width="86" height="60" rx="2" fill="#0a0e18" stroke="#202030" stroke-width="0.7"/>
+                <text x="287" y="150" text-anchor="middle" fill="#606870" font-size="7" font-family="IBM Plex Mono">Picosecond</text>
+                <text x="287" y="160" text-anchor="middle" fill="#606870" font-size="7" font-family="IBM Plex Mono">Ultrasound</text>
+                <line x1="262" y1="164" x2="262" y2="186" stroke="#00c8e8" stroke-width="1" stroke-opacity="0.6" stroke-dasharray="2,2"/>
+                <line x1="262" y1="186" x2="312" y2="186" stroke="#0a0e18" stroke-width="4"/>
+                <line x1="262" y1="186" x2="312" y2="186" stroke="#304060" stroke-width="1"/>
+                <line x1="287" y1="186" x2="287" y2="175" stroke="#00c8e8" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="2,2"/>
+                <text x="287" y="204" text-anchor="middle" fill="#006878" font-size="6.5" font-family="IBM Plex Mono">echo to nm</text>
+                <!-- Uniformity map -->
+                <text x="180" y="226" text-anchor="middle" fill="#667081" font-size="7.5" font-family="IBM Plex Mono" letter-spacing="1">WAFER UNIFORMITY MAP</text>
+                <circle cx="180" cy="270" r="38" fill="none" stroke="#303848" stroke-width="1"/>
+                <circle cx="180" cy="270" r="28" fill="none" stroke="#303040" stroke-width="0.5" stroke-dasharray="2,3"/>
+                <circle cx="180" cy="270" r="16" fill="none" stroke="#303040" stroke-width="0.5" stroke-dasharray="2,3"/>
+                <circle cx="180" cy="270" r="5"  fill="rgba(0,180,220,0.6)"/>
+                <circle cx="200" cy="260" r="4"  fill="rgba(0,160,200,0.5)"/>
+                <circle cx="165" cy="258" r="4"  fill="rgba(0,170,210,0.5)"/>
+                <circle cx="193" cy="282" r="4"  fill="rgba(0,165,205,0.5)"/>
+                <circle cx="163" cy="278" r="4"  fill="rgba(0,155,195,0.45)"/>
+                <circle cx="210" cy="275" r="3.5" fill="rgba(50,100,180,0.45)"/>
+                <circle cx="155" cy="268" r="3.5" fill="rgba(50,100,180,0.4)"/>
+                <text x="180" y="318" text-anchor="middle" fill="#405868" font-size="7" font-family="IBM Plex Mono">49-point concentric ring sampling - NU% target <3%</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 15: References & Credits -->
+        <div class="slide" id="slide-14">
+          <div class="sl-text" style="overflow-y:auto;">
+            <div class="sl-eyebrow"><span class="sl-chapter">References</span><span class="sl-sep">/</span><span class="sl-page">Credits</span></div>
+            <div class="sl-title">Sources &<br><span>Credits</span></div>
+            <div class="sl-rule"></div>
+            <p class="sl-body">This tutorial was built on authoritative textbooks and peer-reviewed literature in thin film deposition, vacuum science, and semiconductor processing. All physics models in the simulator are grounded in the sources listed below.</p>
+            <div class="key-box" style="margin-bottom:14px;">
+              <div class="key-box-label">Primary Textbooks</div>
+              <div class="key-box-text" style="line-height:2.2;">
+                [1] A.H. Simon, "Sputter Processing," in <em>Handbook of Thin Film Deposition</em>, 3rd ed., Elsevier, 2012, pp. 55-88.<br>
+                [2] M. Ohring, <em>The Materials Science of Thin Films</em>, Academic Press, 1992.<br>
+                [3] N. Yoshimura, <em>Vacuum Technology: Practice for Scientific Instruments</em>, Springer, 2008.
+              </div>
+            </div>
+            <div class="key-box" style="margin-bottom:14px;">
+              <div class="key-box-label">Physics Models &amp; Papers</div>
+              <div class="key-box-text" style="line-height:2.2;">
+                [4] N. Matsunami, Y. Yamamura et al., At. Data Nucl. Data Tables 31, 1 (1984) - yield data and semi-empirical fits.<br>
+                [5] Y. Yamamura and H. Tawara, At. Data Nucl. Data Tables 62, 149 (1996) - updated semi-empirical sputtering yield formula for monatomic solids.<br>
+                [6] J. Bohdansky et al., J. Appl. Phys. 51(5), 2861 (1980) - threshold-aware semi-empirical yield formulation.<br>
+                [7] P. Sigmund, Phys. Rev. 184, 383 (1969) - foundational sputtering theory.
+              </div>
+            </div>
+            <div class="key-box">
+              <div class="key-box-label">Additional References</div>
+              <div class="key-box-text" style="line-height:2.2;">
+                [8] D.M. Mattox, <em>Handbook of Physical Vapor Deposition (PVD) Processing</em>, 2nd ed., William Andrew, 2010.<br>
+                [9] J.E. Mahan, <em>Physical Vapor Deposition of Thin Films</em>, Wiley, 2000.<br>
+                [10] S.M. Rossnagel, J. Vac. Sci. Technol. A 21(5), S74 (2003).<br>
+                [11] C.-C. Yang et al., Electrochem. Solid-State Lett. 13(6), H197 (2010).
+              </div>
+            </div>
+          </div>
+          <div class="sl-diagram" style="display:flex;flex-direction:column;">
+            <div class="sl-diagram-header">Simulator &amp; Acknowledgements</div>
+            <div class="sl-diagram-body" style="flex:1;flex-direction:column;gap:16px;padding:24px 20px;align-items:flex-start;justify-content:flex-start;">
+              <div style="width:100%;">
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold-d);margin-bottom:10px;">Interactive Sputtering Simulation</div>
+                <div style="font-family:var(--sans);font-size:12.5px;color:var(--g1);line-height:1.8;margin-bottom:18px;">An educational simulator for magnetron PVD thin film deposition. Implements a Yamamura/Bohdansky-style reduced-order sputtering yield model, reduced-order plasma confinement, pressure-based transport, and three-mode film growth (FM / VW / SK) in real time.</div>
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);margin-bottom:10px;">Physics Engines</div>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--g1);line-height:2.0;margin-bottom:18px;">
+                  Yield Model: Yamamura/Bohdansky reduced-order<br>
+                  Plasma Model: heuristic confinement + discharge scaling<br>
+                  Gas Transport: kinetic theory (lambda) + simplified scattering<br>
+                  Growth Modes: FM / VW / Stranski-Krastanov<br>
+Co-sputtering: 3-gun independent power control<br>
+                  Model note: Yamamura/Bohdansky for yield, kinetic theory for transport, heuristic poisoning for reactive sputtering
+                </div>
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-d);margin-bottom:10px;">Online Resources</div>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--g1);line-height:2.0;">
+                  AVS Journal of Vacuum Science &amp; Technology | avs.scitation.org<br>
+                  NIST Sputtering Yield Database | physics.nist.gov<br>
+                  MIT OpenCourseWare 3.15 | ocw.mit.edu<br>
+                  Thin Film Physics, Uppsala Univ. | physics.uu.se
+                </div>
+              </div>
+              <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border);width:100%;">
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--g3);margin-bottom:6px;">VERSION 1 | EDUCATIONAL USE</div>
+                <div style="font-family:var(--sans);font-size:11px;color:var(--g2);">Yuan Ze University | Department of Electrical Engineering | Taiwan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      </div><!-- end slide-wrap -->
+
+      <div id="bottom-nav">
+        <div class="bn-left">
+          <div class="bn-dots" id="bn-dots"></div>
+          <div class="bn-counter" id="bn-counter">1 / 15</div>
+        </div>
+        <div class="bn-right">
+          <button class="btn-prev" id="btn-prev" disabled>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Prev
+          </button>
+          <button class="btn-next" id="btn-next">
+            Next
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+    <a href="index.html" class="btn-finish" id="btn-finish" style="display:none;">
+            Back to Home
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            </svg>
+          </a>
+    <a href="simulator.html" class="btn-finish btn-sim" id="btn-sim-launch" style="display:none;">
+            <span data-lang-key="landing-btn-launch">Open Simulator</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div><!-- end content -->
+  </div><!-- end main -->
+
+  <script>
+    const TOTAL = 15; let current = 0; const seen = new Set([0]);
+    const slides = document.querySelectorAll('.slide');
+    const chapters = document.querySelectorAll('.chapter-item');
+    const pfill = document.getElementById('progress-fill');
+    const counter = document.getElementById('bn-counter');
+    const sbProg = document.getElementById('sb-prog-text');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnFin = document.getElementById('btn-finish');
+    const btnSim = document.getElementById('btn-sim-launch');
+    const dotsWrap = document.getElementById('bn-dots');
+    for (let i = 0; i < TOTAL; i++) { const d = document.createElement('div'); d.className = 'bn-dot' + (i === 0 ? ' active' : ''); d.addEventListener('click', () => goTo(i)); dotsWrap.appendChild(d); }
+    function goTo(n) { if (n < 0 || n >= TOTAL) return; slides[current].classList.remove('active'); slides[current].classList.add('exit'); setTimeout(() => slides[current].classList.remove('exit'), 420); current = n; seen.add(n); slides[current].classList.add('active'); updateUI(); }
+    function updateUI() { pfill.style.width = ((current + 1) / TOTAL * 100) + '%'; counter.textContent = (current + 1) + ' / ' + TOTAL; sbProg.textContent = (current + 1) + ' / ' + TOTAL; chapters.forEach((ch, i) => { ch.classList.toggle('active', i === current); ch.classList.toggle('done', seen.has(i) && i !== current); }); const dots = dotsWrap.querySelectorAll('.bn-dot'); dots.forEach((d, i) => { d.classList.toggle('active', i === current); d.classList.toggle('done', seen.has(i) && i !== current); }); btnPrev.disabled = current === 0; if (current === TOTAL - 1) { btnNext.style.display = 'none'; btnFin.style.display = 'flex'; btnSim.style.display = 'flex'; } else { btnNext.style.display = 'flex'; btnFin.style.display = 'none'; btnSim.style.display = 'none'; } }
+    btnNext.addEventListener('click', () => goTo(current + 1));
+    btnPrev.addEventListener('click', () => goTo(current - 1));
+    chapters.forEach((ch, i) => { ch.addEventListener('click', () => goTo(i)); });
+    document.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1); if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1); });
+    updateUI();
+
+
+  </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
