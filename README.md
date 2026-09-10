@@ -22,7 +22,7 @@ SputterOne is a browser-based physics-informed reduced-order simulation platform
 
 ### Physics Modules
 
-- **Yamamura–Bohdansky sputtering yield** — 8 target materials (Cu, Al, Ti, Zn, Sn, W, Ta, Mo)
+- **Yamamura–Bohdansky sputtering yield** — 9 target materials (Cu, Al, Ti, Zn, Ag, Sn, W, Ta, Mo)
 - **Kinetic-theory mean free path transport** — pressure-dependent regime classification
 - **Probabilistic gas-phase scattering** — ballistic / moderate / diffusive regimes
 - **Berg-framework reactive sputtering hysteresis** — Ar/O₂ atmospheres
